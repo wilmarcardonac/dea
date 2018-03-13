@@ -1,0 +1,6 @@
+output/*.txt
+*.mod
+*.o
+*.zip
+*.tgz
+*.out
