@@ -1,8 +1,11 @@
 FC     = gfortran
 LC     = $(FC)
 EXE    = dea
-F_FL   = -O3 -Wall  -fno-second-underscore -fopenmp -fPIC -g
-LIB_FL =  
+INCDIR = /usr/local/include/fgsl
+LIBDIR = /usr/local/lib
+F_FL   = -O3 -Wall -I$(INCDIR) -DGFORTRAN -fno-second-underscore -fopenmp -fPIC -g
+LIB_FL = -L$(LIBDIR) -lfgsl 
+
 #####################
 OBJ   = fiducial.o functions.o diff_asde.o radau5.o decsol.o dc_decsol.o 
 
@@ -23,4 +26,4 @@ clean :
 
 ### put dependencies here ###
 
-diff_asde.o :	diff_asde.f90 fiducial.o functions.o 
+diff_asde.o :	diff_asde.f90 fiducial.o functions.o  
