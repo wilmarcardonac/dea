@@ -64,6 +64,7 @@ Module fiducial
 
   Real*8,parameter :: initial_scale_factor = 1.d-5
   Real*8,parameter :: final_scale_factor = 1.d0
+  Real*8,parameter :: switch_off_pressure_perturbation_terms = 1.d1
 
   Character(len=*),parameter :: MG_parametrisation = 'HS_Basilakos' !'HS_Basilakos' ! 'HS_Basilakos', 'Starobinsky_Basilakos', 'GR',... 
 

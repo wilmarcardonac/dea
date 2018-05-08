@@ -592,34 +592,55 @@ subroutine RHSPER(N,X,Y,F,RPAR,IPAR)
 
      Else if (MG_parametrisation .eq. 'HS_Basilakos') then
 
-        F(1) = -(3*H0**2*Omega_m*Y(1) + (-3*H0**2*Omega_m + 3*X*conformal_Hubble_parameter(X)**2)*Y(2) + &
-          2*X*(wavenumber_k**2*Y(5) + conformal_Hubble_parameter(X)*(Y(3) + 3*conformal_Hubble_parameter(X)*&
-          Y(6))))/(2.*X**2*conformal_Hubble_parameter(X)**2)
+        F(1) = -(3*H0**2*Omega_m*Y(1) + 3*H0**2*X**3*Omega_DE(X)*Y(2) + 2*X*(wavenumber_k**2*Y(5) + &
+             conformal_Hubble_parameter(X)*(Y(3) + 3*conformal_Hubble_parameter(X)*Y(6))))/&
+             (2.*X**2*conformal_Hubble_parameter(X)**2)
 
-        F(2) = (2*H0**2*Omega_m*X*conformal_Hubble_parameter(X)*Y(4) - 2*X**2*conformal_Hubble_parameter(X)**3*Y(4) + &
-         H0**2*Omega_m*(1 + equation_of_state(X))*(3*H0**2*Omega_m*(Y(1) - Y(2)) + 2*wavenumber_k**2*X*Y(5)) + &
-         3*X**2*conformal_Hubble_parameter(X)**4*((-1 + equation_of_state(X))*Y(2) - 2*(1 + equation_of_state(X))*Y(6)) +& 
-         X*conformal_Hubble_parameter(X)**2*(-3*H0**2*Omega_m*(1 + 2*dark_energy_pressure_perturbation(X) + &
-         equation_of_state(X))*Y(1) + 6*H0**2*Omega_m*Y(2) - 2*(1 + equation_of_state(X))*(wavenumber_k**2*X*Y(5) - &
-         3*H0**2*Omega_m*Y(6))))/(2.*X**2*conformal_Hubble_parameter(X)**2*(-(H0**2*Omega_m) + X*conformal_Hubble_parameter(X)**2)) 
+!!$-(3*H0**2*Omega_m*Y(1) + (-3*H0**2*Omega_m + 3*X*conformal_Hubble_parameter(X)**2)*Y(2) + &
+!!$          2*X*(wavenumber_k**2*Y(5) + conformal_Hubble_parameter(X)*(Y(3) + 3*conformal_Hubble_parameter(X)*&
+!!$          Y(6))))/(2.*X**2*conformal_Hubble_parameter(X)**2)
+
+        F(2) = -(2*X**3*conformal_Hubble_parameter(X)*Omega_DE(X)*Y(4) + X**2*(1 + &
+             equation_of_state(X))*Omega_DE(X)*(3*H0**2*(Omega_m*Y(1) + X**3*Omega_DE(X)*Y(2)) + &
+             2*wavenumber_k**2*X*Y(5)) + 6*conformal_Hubble_parameter(X)**2*(Omega_m*dark_energy_pressure_perturbation(X)*Y(1) + &
+             X**3*Omega_DE(X)*(Y(6) + equation_of_state(X)*(-Y(2) + Y(6)))))/(2.*X**4*conformal_Hubble_parameter(X)**2*Omega_DE(X))
+
+!!$(2*H0**2*Omega_m*X*conformal_Hubble_parameter(X)*Y(4) - 2*X**2*conformal_Hubble_parameter(X)**3*Y(4) + &
+!!$         H0**2*Omega_m*(1 + equation_of_state(X))*(3*H0**2*Omega_m*(Y(1) - Y(2)) + 2*wavenumber_k**2*X*Y(5)) + &
+!!$         3*X**2*conformal_Hubble_parameter(X)**4*((-1 + equation_of_state(X))*Y(2) - 2*(1 + equation_of_state(X))*Y(6)) +& 
+!!$         X*conformal_Hubble_parameter(X)**2*(-3*H0**2*Omega_m*(1 + 2*dark_energy_pressure_perturbation(X) + &
+!!$         equation_of_state(X))*Y(1) + 6*H0**2*Omega_m*Y(2) - 2*(1 + equation_of_state(X))*(wavenumber_k**2*X*Y(5) - &
+!!$         3*H0**2*Omega_m*Y(6))))/(2.*X**2*conformal_Hubble_parameter(X)**2*(-(H0**2*Omega_m) + X*conformal_Hubble_parameter(X)**2)) 
 
         F(3) = -Y(3)/X + wavenumber_k**2*Y(6)/X/conformal_Hubble_parameter(X)
 
-        F(4) = -((conformal_Hubble_parameter(X)*(1 - 3*equation_of_state(X))*Y(4) + (wavenumber_k**2*&
-             ((H0**2*Omega_m*(-2*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0) + 3*dark_energy_pressure_perturbation(X))*Y(1))/&
-             (H0**2*Omega_m - X*conformal_Hubble_parameter(X)**2) - 3*(1 + equation_of_state(X))*Y(6)))/3.)/&
-             (X*conformal_Hubble_parameter(X)))
+        F(4) = (Omega_m*wavenumber_k**2*(-2*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0) + &
+             3*dark_energy_pressure_perturbation(X))*Y(1) + &
+             3*X**3*Omega_DE(X)*(conformal_Hubble_parameter(X)*(-1 + 3*equation_of_state(X))*Y(4) + wavenumber_k**2*(1 + &
+             equation_of_state(X))*Y(6)))/(3.*X**4*conformal_Hubble_parameter(X)*Omega_DE(X))
 
-        F(5) = -(3*H0**2*Omega_m*Y(1) + (-3*H0**2*Omega_m + 3*X*conformal_Hubble_parameter(X)**2)*Y(2) + &
-             2*wavenumber_k**2*X*Y(5) + 6*X*conformal_Hubble_parameter(X)**2*Y(6))/(6.*X**2*conformal_Hubble_parameter(X)**2)
+!!$-((conformal_Hubble_parameter(X)*(1 - 3*equation_of_state(X))*Y(4) + (wavenumber_k**2*&
+!!$             ((H0**2*Omega_m*(-2*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0) + 3*dark_energy_pressure_perturbation(X))*Y(1))/&
+!!$             (H0**2*Omega_m - X*conformal_Hubble_parameter(X)**2) - 3*(1 + equation_of_state(X))*Y(6)))/3.)/&
+!!$             (X*conformal_Hubble_parameter(X)))
 
-        F(6) = (-3*H0**2*Omega_m*wavenumber_k**2*Y(1) + 3*wavenumber_k**2*(H0**2*Omega_m - &
-             X*conformal_Hubble_parameter(X)**2)*Y(2) - 2*(9*X*conformal_Hubble_parameter(X)**4*(-2*anisotropic_stress(X,&
-             0.d0,0.d0,0.d0,0.d0) + X*derivative_anisotropic_stress(X)) + 18*X**2*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0)*&
-             conformal_Hubble_parameter(X)**3*derivative_conformal_Hubble_parameter(X) + wavenumber_k**4*X*Y(5) + &
-             3*conformal_Hubble_parameter(X)**2*(3*H0**2*Omega_m*(3*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0) - &
-             X*derivative_anisotropic_stress(X)) + wavenumber_k**2*X*(2*Y(5) - Y(6)))))/(6.*wavenumber_k**2*X**2*&
-             conformal_Hubble_parameter(X)**2)
+        F(5) = -(3*H0**2*Omega_m*Y(1) + 3*H0**2*X**3*Omega_DE(X)*Y(2) + 2*wavenumber_k**2*X*Y(5) + &
+             6*X*conformal_Hubble_parameter(X)**2*Y(6))/(6.*X**2*conformal_Hubble_parameter(X)**2)
+
+!!$-(3*H0**2*Omega_m*Y(1) + (-3*H0**2*Omega_m + 3*X*conformal_Hubble_parameter(X)**2)*Y(2) + &
+!!$             2*wavenumber_k**2*X*Y(5) + 6*X*conformal_Hubble_parameter(X)**2*Y(6))/(6.*X**2*conformal_Hubble_parameter(X)**2)
+
+        F(6) = -((3*H0**2*(Omega_m*Y(1) + X**3*Omega_DE(X)*Y(2)) + 2*wavenumber_k**2*X*Y(5))/conformal_Hubble_parameter(X)**2 + &
+             (6*X*(3*H0**2*X**3*(anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0)*derivative_Omega_DE(X) + &
+             derivative_anisotropic_stress(X)*Omega_DE(X)) + wavenumber_k**2*(2*Y(5) - Y(6))))/wavenumber_k**2)/(6.*X**2)
+
+!!$(-3*H0**2*Omega_m*wavenumber_k**2*Y(1) + 3*wavenumber_k**2*(H0**2*Omega_m - &
+!!$             X*conformal_Hubble_parameter(X)**2)*Y(2) - 2*(9*X*conformal_Hubble_parameter(X)**4*(-2*anisotropic_stress(X,&
+!!$             0.d0,0.d0,0.d0,0.d0) + X*derivative_anisotropic_stress(X)) + 18*X**2*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0)*&
+!!$             conformal_Hubble_parameter(X)**3*derivative_conformal_Hubble_parameter(X) + wavenumber_k**4*X*Y(5) + &
+!!$             3*conformal_Hubble_parameter(X)**2*(3*H0**2*Omega_m*(3*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0) - &
+!!$             X*derivative_anisotropic_stress(X)) + wavenumber_k**2*X*(2*Y(5) - Y(6)))))/(6.*wavenumber_k**2*X**2*&
+!!$             conformal_Hubble_parameter(X)**2)
 
      Else if (MG_parametrisation .eq. 'Starobinsky_Basilakos') then
 

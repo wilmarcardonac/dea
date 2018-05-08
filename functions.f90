@@ -449,20 +449,28 @@ Contains
 
     Real*8 :: a,sound_speed_squared
 
-    sound_speed_squared = (2.d0*wavenumber_k**2*FR(a))/(3.d0*a**2*F_MG(a) - &
-         3.d0*a**2*F_MG(a)**2 + 3.d0*wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)) &
+    If ( a .lt. switch_off_pressure_perturbation_terms) then
 
-         +(conformal_Hubble_parameter(a)**2*FR_prime(a)/a + conformal_Hubble_parameter(a)*&
-         derivative_conformal_Hubble_parameter(a)*FR_prime(a)&
-         + conformal_Hubble_parameter(a)**2*FR_double_prime(a))/&
-         (1.d0 - F_MG(a) + wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)/a**2/F_MG(a) ) &
+       sound_speed_squared = (2.d0*wavenumber_k**2*FR(a))/(3.d0*a**2*F_MG(a) - &
+            3.d0*a**2*F_MG(a)**2 + 3.d0*wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)) &
 
-         + ( a*conformal_Hubble_parameter(a)**2*& 
-         F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
-         derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
-         F_MG_double_prime(a))/( wavenumber_k**2 - F_MG(a)*wavenumber_k**2 + wavenumber_k**4*(2.d0 - &
-         3.d0*F_MG(a))*FR(a)/a**2/F_MG(a)  )
+            +(conformal_Hubble_parameter(a)**2*FR_prime(a)/a + conformal_Hubble_parameter(a)*&
+            derivative_conformal_Hubble_parameter(a)*FR_prime(a)&
+            + conformal_Hubble_parameter(a)**2*FR_double_prime(a))/&
+            (1.d0 - F_MG(a) + wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)/a**2/F_MG(a) ) &
 
+            + ( a*conformal_Hubble_parameter(a)**2*& 
+            F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
+            derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
+            F_MG_double_prime(a))/( wavenumber_k**2 - F_MG(a)*wavenumber_k**2 + wavenumber_k**4*(2.d0 - &
+            3.d0*F_MG(a))*FR(a)/a**2/F_MG(a)  )
+
+    Else
+
+       sound_speed_squared = (2.d0*wavenumber_k**2*FR(a))/(3.d0*a**2*F_MG(a) - &
+            3.d0*a**2*F_MG(a)**2 + 3.d0*wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)) 
+
+    End if
 
   end function sound_speed_squared
 
@@ -622,17 +630,26 @@ Contains
 
     Real*8 :: dark_energy_pressure_perturbation,a
 
-    dark_energy_pressure_perturbation = 2.d0*wavenumber_k**2*FR(a)/(3.d0*a**2*F_MG(a)**2 + &
-     9.d0*wavenumber_k**2*FR(a)*F_MG(a) ) + &
+    If ( a .lt. switch_off_pressure_perturbation_terms) then
 
-     ((a*conformal_Hubble_parameter(a)**2 + a**2*conformal_Hubble_parameter(a)*&
-     derivative_conformal_Hubble_parameter(a))*FR_prime(a) + &
-     a**2*conformal_Hubble_parameter(a)**2*FR_double_prime(a) )/(a**2*F_MG(a)  &
-     + 3.d0*wavenumber_k**2*FR(a)) + &
+       dark_energy_pressure_perturbation = 2.d0*wavenumber_k**2*FR(a)/(3.d0*a**2*F_MG(a)**2 + &
+            9.d0*wavenumber_k**2*FR(a)*F_MG(a) ) + &
 
-     ( a*conformal_Hubble_parameter(a)**2*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
-     derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
-     F_MG_double_prime(a))/(F_MG(a)*wavenumber_k**2 + 3.d0*wavenumber_k**4*FR(a)/a**2  )
+            ((a*conformal_Hubble_parameter(a)**2 + a**2*conformal_Hubble_parameter(a)*&
+            derivative_conformal_Hubble_parameter(a))*FR_prime(a) + &
+            a**2*conformal_Hubble_parameter(a)**2*FR_double_prime(a) )/(a**2*F_MG(a)  &
+            + 3.d0*wavenumber_k**2*FR(a)) + &
+
+            ( a*conformal_Hubble_parameter(a)**2*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
+            derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
+            F_MG_double_prime(a))/(F_MG(a)*wavenumber_k**2 + 3.d0*wavenumber_k**4*FR(a)/a**2  )
+
+    Else
+
+       dark_energy_pressure_perturbation = 2.d0*wavenumber_k**2*FR(a)/(3.d0*a**2*F_MG(a)**2 + &
+            9.d0*wavenumber_k**2*FR(a)*F_MG(a) ) 
+
+    End if
 
   end function dark_energy_pressure_perturbation
 
@@ -1059,7 +1076,7 @@ Contains
     Else
 
        phi = -(3.d0*H0**2/2.d0/k**2)*(Omega_m*Delta_matter(a,k,y1,y3)/a + &
-            (conformal_Hubble_parameter(a)**2/H0**2 - Omega_m/a)*Delta_dark_energy(a,k,y2,y4) )
+            Omega_DE(a)*a**2*Delta_dark_energy(a,k,y2,y4) )
 
     End if
 
@@ -1083,11 +1100,55 @@ Contains
     Else
 
        psi = phi(a,k,y1,y2,y3,y4) - 3.d0*H0**2/k**2*anisotropic_stress(a,y1,y2,y3,y4)*&
-            (conformal_Hubble_parameter(a)**2/H0**2 - Omega_m/a)
+            Omega_DE(a)*a**2
 
     End if
 
   end function psi
+
+  function Omega_DE(a)
+
+    use fiducial
+
+    Implicit none
+
+    Real*8 :: a, Omega_DE
+
+    Omega_DE = 1.d0 - Omega_m + (2*a**2*b_fR*(-1 + Omega_m)**2*(12*a**7*(-1 + Omega_m)**2 + 3*a**4*(-1 + Omega_m)*Omega_m - &
+         6*a*Omega_m**2))/(4*a**3*(-1 + Omega_m) - Omega_m)**3 - (a**5*b_fR**2*(-1 + Omega_m)**3*(-1024*a**19*(-1 + &
+         Omega_m)**6 - 9216*a**16*(-1 + Omega_m)**5*Omega_m + 22848*a**13*(-1 + Omega_m)**4*Omega_m**2 - 25408*a**10*(-1 + &
+         Omega_m)**3*Omega_m**3 + 7452*a**7*(-1 + Omega_m)**2*Omega_m**4 + 4656*a**4*(-1 + Omega_m)*Omega_m**5 - &
+         37*a*Omega_m**6))/(-4*a**3*(-1 + Omega_m) + Omega_m)**8
+
+  end function Omega_DE
+
+  function Omega_DE_fgsl(x, params) bind(c)
+    
+    real(c_double), value :: x
+    type(c_ptr), value :: params
+    real(c_double) :: Omega_DE_fgsl
+
+    Omega_DE_fgsl = Omega_DE(x)
+
+  end function Omega_DE_fgsl
+
+
+  function derivative_Omega_DE(x)
+
+    real(fgsl_double) :: result, abserr
+    integer(fgsl_int) :: status
+    type(fgsl_function) :: pwr
+    real(fgsl_double) :: derivative_Omega_DE,x
+
+
+    pwr = fgsl_function_init(Omega_DE_fgsl, c_null_ptr)
+
+    status = fgsl_deriv_central (pwr, x , 1.E-8_fgsl_double, &
+         result, abserr)
+
+    derivative_Omega_DE = result
+
+  end function derivative_Omega_DE
 
   !################################################################################################################
   ! SOLUTIONS FOR DARK ENERGY PERTURBATIONS IN MATTER DOMINATED REGIME WHEN CONSIDERING THE DARK ENERGY ANISOTROPIC
@@ -1260,10 +1321,9 @@ Contains
 !!$         (1.d0-Omega_m)/35.d0/Omega_m - 81.d0*a**2*b_fR*delta_0(wavenumber_k)*(1.d0-Omega_m)*&
 !!$         (2.d0*Omega_m - 9.d0*a**3*b_fR*(1.d0-Omega_m))*H0**4/5.d0/wavenumber_k**4
 
-((1.d0 - F_MG(a) + &
+         ((1.d0 - F_MG(a) + &
          wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)/(a**2*F_MG(a)))/(1.d0 + &
-         3.d0*wavenumber_k**2*FR(a)/(a**2*F_MG(a))))*Omega_m*y1/F_MG(a)/(&
-         conformal_Hubble_parameter(a)**2*a/H0**2 - Omega_m  )
+         3.d0*wavenumber_k**2*FR(a)/(a**2*F_MG(a))))*Omega_m*y1/F_MG(a)/(a**3*Omega_DE(a))
 
   end function dark_energy_density_perturbation
 
@@ -1281,11 +1341,9 @@ Contains
 !!$         5.d0/Sqrt(Omega_m) + H0**3*108.d0*a**(5.d0/2.d0)*b_fR*delta_0(wavenumber_k)*(1.d0-Omega_m)*Sqrt(Omega_m)/&
 !!$         13.d0/wavenumber_k**2 
 
-(Omega_m*y1)/( conformal_Hubble_parameter(a)**2*a/H0**2 - &
-         Omega_m)*(conformal_Hubble_parameter(a)*wavenumber_k**2*FR_prime(a)/F_MG(a)/a &   
-         + a*conformal_Hubble_parameter(a)*F_MG_prime(a)/F_MG(a)&
-         )/(1.d0 + &
-         3.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a))
+         (Omega_m*y1)/(a**3*Omega_DE(a))*(conformal_Hubble_parameter(a)*wavenumber_k**2*&
+         FR_prime(a)/F_MG(a)/a + a*conformal_Hubble_parameter(a)*F_MG_prime(a)/F_MG(a)&
+         )/(1.d0 + 3.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a))
 
   end function dark_energy_velocity_perturbation
   
@@ -1429,8 +1487,7 @@ Contains
             sound_speed_squared(scale_factor(index)),&
             effective_sound_speed_squared(scale_factor(index),wavenumber_k),&
             Omega_m/scale_factor(index)**3,&
-            conformal_Hubble_parameter(scale_factor(index))**2/scale_factor(index)**2/H0**2 - &
-            Omega_m/scale_factor(index)**3,&
+            Omega_DE(scale_factor(index)),&
             dark_energy_pressure_perturbation(scale_factor(index)),&
             matter_density_perturbation(scale_factor(index),wavenumber_k)/delta_0(wavenumber_k),&
             matter_velocity_perturbation(scale_factor(index),wavenumber_k)/delta_0(wavenumber_k),&
