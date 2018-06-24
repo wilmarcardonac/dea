@@ -5,10 +5,11 @@ Program time_evolution
   !################
 
   use fgsl
-  use fiducial 
-  use functions
-  
- 
+  use fiducial
+  use background
+  use initial_conditions
+  use perturbations
+   
   !#################
   ! DEFINE VARIABLES 
   !#################
@@ -49,10 +50,19 @@ Program time_evolution
 
   open(UNIT_OUTPUT_FILE2,file=ANALYTICAL_SOLUTION)
 
+!  print *, F_MG_savvas(final_scale_factor)
+!  print *, ricci_scalar(final_scale_factor),6.d0*(H0**2 + H0 - H0*3.d0*Omega_m/2.d0 )
+!  print *, ricci_scalar(final_scale_factor)/(ricci_scalar(final_scale_factor)-3.d0*Lambda)
+!  print *, fgsl_sf_hyperg_2f1(a,b,c,1.4586376458477734d-4)
+!  print *, Lambda/(ricci_scalar(final_scale_factor)-3.d0*Lambda)
+!  print *, fgsl_sf_hyperg_2f1(1.E0_fgsl_double,1.E0_fgsl_double,1.E0_fgsl_double,1.E-1_fgsl_double)
+!  print *, fgsl_sf_hyperg_2f1(1.d0,1.d0,1.d0,1.d-1)
 !  call test_function()
 !  call test_approximations()
 
-!  stop
+  call compute_background()
+
+  stop
 
   write(UNIT_EXE_FILE,*) 'STARTING ANALYSIS. PARAMETERS FOR CURRENT RUN ARE AS FOLLOWS: '
 
@@ -71,6 +81,18 @@ Program time_evolution
      write(UNIT_EXE_FILE,*) 'DEA PARAMETER f_\pi : ', f_pi
 
      write(UNIT_EXE_FILE,*) 'DEA PARAMETER g_\pi : ', g_pi
+
+  Else if (MG_parametrisation .eq. 'Savvas') then
+
+     write(UNIT_EXE_FILE,*) 'IN THIS f(R) PARAMETRISATION THE EQUATION OF STATE DOES NOT EVOLVE WITH TIME. IN FACT, IT IS -1'
+
+     write(UNIT_EXE_FILE,*) 'MATTER DENSITY PARAMETER: ', Omega_m
+
+     write(UNIT_EXE_FILE,*) 'WAVENUMBER: ', wavenumber_k, ' Mpc^{-1}'
+
+     write(UNIT_EXE_FILE,*) 'MG PARAMETER alpha : ', alpha
+
+     write(UNIT_EXE_FILE,*) 'DEA EVOLVES WITH TIME : '
 
   Else
 
@@ -100,6 +122,10 @@ Program time_evolution
 
      stop
 
+  Else if (MG_parametrisation .eq. 'Savvas') then
+
+     write(UNIT_EXE_FILE,*) 'THE f(R) PARAMETRISATION USED IN THIS ANALYSIS IS GIVEN IN SAVVAS PAPER 1309.1055 [Eq. (2.14)]'
+
   Else if (MG_parametrisation .eq. 'GR') then
 
      write(UNIT_EXE_FILE,*) 'CURRENT ANALYSIS ASSUMES GENERAL RELATIVITY'
@@ -112,30 +138,38 @@ Program time_evolution
 
   End if
 
-  If ( effective_sound_speed_squared(initial_scale_factor,wavenumber_k) .ge. 0 ) Then
+  If (MG_parametrisation .eq. 'Savvas') then
 
-     write(UNIT_EXE_FILE,*) 'AT INITIAL SCALE FACTOR a = ', initial_scale_factor
-
-     write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS : ', &
-          effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
-
-     write(UNIT_EXE_FILE,*) 'AT FINAL SCALE FACTOR a = ', final_scale_factor
-
-     write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS : ', &
-          effective_sound_speed_squared(final_scale_factor,wavenumber_k)
+     write(UNIT_EXE_FILE,*) 'EFFECTIVE FLUID APPROACH HAS NOT YET BEEN IMPLEMENTED'
 
   Else
 
-     write(UNIT_EXE_FILE,*) 'AT ONSET EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS NEGATIVE: ',&
-          effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
+     If ( effective_sound_speed_squared(initial_scale_factor,wavenumber_k) .ge. 0 ) Then
 
-     write(UNIT_EXE_FILE,*) 'AND WILL POSSIBLY LEAD TO INSTABILITIES IN THE PERTURBATIONS'
+        write(UNIT_EXE_FILE,*) 'AT INITIAL SCALE FACTOR a = ', initial_scale_factor
 
-     write(UNIT_EXE_FILE,*) 'TODAY EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS: ', &
-          effective_sound_speed_squared(final_scale_factor,wavenumber_k)
+        write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS : ', &
+             effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
 
-  End If
-  
+        write(UNIT_EXE_FILE,*) 'AT FINAL SCALE FACTOR a = ', final_scale_factor
+
+        write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS : ', &
+             effective_sound_speed_squared(final_scale_factor,wavenumber_k)
+
+     Else
+
+        write(UNIT_EXE_FILE,*) 'AT ONSET EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS NEGATIVE: ',&
+             effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
+
+        write(UNIT_EXE_FILE,*) 'AND WILL POSSIBLY LEAD TO INSTABILITIES IN THE PERTURBATIONS'
+
+        write(UNIT_EXE_FILE,*) 'TODAY EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS: ', &
+             effective_sound_speed_squared(final_scale_factor,wavenumber_k)
+
+     End If
+
+  End if
+
   !##############################################################################################################################
   ! INPUT PARAMETERS FOR THE SUBROUTINE SOLVING THE SYSTEM. LOOK INSIDE 'radau5.f90 TO GET THE CORRECT MEANING FOR EACH PARAMETER
   !##############################################################################################################################
@@ -149,24 +183,44 @@ Program time_evolution
   IMAS = IMAS_RADAU ! DIFFERENTIAL EQUATION IS IN EXPLICIT FORM -> 0: M IS THE IDENTITY                         
         
   IOUT = 1 ! OUTPUT ROUTINE IS USED DURING INTEGRATION                         
-         
-  X = initial_scale_factor  ! INITIAL VALUE OF THE SCALE FACTOR
-             
-  write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS ARE SET AT SCALE FACTOR : ', X
+
+  If (MG_parametrisation .eq. 'Savvas') then
+
+     X = initial_scale_factor 
+ 
+     write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS ARE SET AT a : ', X
+
+  Else
+
+     X = initial_scale_factor  ! INITIAL VALUE OF THE SCALE FACTOR
+
+     write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS ARE SET AT SCALE FACTOR : ', X
+
+  End if
 
   write(UNIT_EXE_FILE,*) 'SYSTEM OF DIFFERENTIAL EQUATIONS IS WRITTEN IN THE CODE AS FOLLOWS: '
 
   write(UNIT_EXE_FILE,*) 'Y(1) IS \delta_m, MATTER DENSITY PERTURBATION '
 
-  write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
-
   If (MG_parametrisation .eq. 'GR') then
+
+     write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
 
      write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
 
      write(UNIT_EXE_FILE,*) 'Y(4) IS \theta_de, DARK ENERGY VELOCITY PERTURBATION '
 
+  Else if (MG_parametrisation .eq. 'Savvas') then
+
+     write(UNIT_EXE_FILE,*) 'Y(2) IS \theta_m, MATTER VELOCITY PERTURBATION '
+
+     write(UNIT_EXE_FILE,*) 'Y(3) IS \phi_+ , POTENTIAL \phi_+ '
+
+     write(UNIT_EXE_FILE,*) 'Y(4) IS \chi, POTENTIAL \chi '
+
   Else
+
+     write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
 
      write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
 
@@ -178,19 +232,41 @@ Program time_evolution
 
   End if
 
-  write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER H(a) AT ', X, ' IS : ',conformal_Hubble_parameter(X), ' Mpc^{-1}'
+  If (MG_parametrisation .eq. 'Savvas') then
 
-  write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT INITIAL SCALE FACTOR ', X, ' IS : ',&
-       conformal_Hubble_parameter(X)/speedL, ' Mpc^{-1}'
+     write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER H(a) AT a ', X, ' IS : ',&
+          conformal_Hubble_parameter(X), ' Mpc^{-1}'
 
-  If (wavenumber_k .lt. conformal_Hubble_parameter(X)/speedL) then
+     write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT INITIAL SCALE FACTOR ', &
+          X, ' IS : ', conformal_Hubble_parameter(X)/speedL, ' Mpc^{-1}'
 
-     write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS BEYOND THE HORIZON (SUPER-HORIZON)'
+     If (wavenumber_k .lt. conformal_Hubble_parameter(X)/speedL) then
 
+        write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS BEYOND THE HORIZON (SUPER-HORIZON)'
+
+     Else
+
+        write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS INSIDE THE HORIZON (SUB-HORIZON)'
+
+     End if
+  
   Else
 
-     write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS INSIDE THE HORIZON (SUB-HORIZON)'
+     write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER H(a) AT ', X, ' IS : ',conformal_Hubble_parameter(X), ' Mpc^{-1}'
 
+     write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT INITIAL SCALE FACTOR ', X, ' IS : ',&
+          conformal_Hubble_parameter(X)/speedL, ' Mpc^{-1}'
+
+     If (wavenumber_k .lt. conformal_Hubble_parameter(X)/speedL) then
+
+        write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS BEYOND THE HORIZON (SUPER-HORIZON)'
+
+     Else
+
+        write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS INSIDE THE HORIZON (SUB-HORIZON)'
+
+     End if
+     
   End if
 
   If ( wavenumber_k/ks .lt. lower_limit_ks ) then
@@ -210,13 +286,13 @@ Program time_evolution
   End if
 
   write(UNIT_EXE_FILE,*) 'INITIAL VALUE FOR POTENTIAL IS: ',initial_condition_gravitational_potential(wavenumber_k)
-       
+
   write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER AT THE PRESENT TIME IS : ',conformal_Hubble_parameter(final_scale_factor),&
        ' Mpc^{-1}'
 
   write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT THE PRESENT TIME IS : ', &
        conformal_Hubble_parameter(final_scale_factor)/speedL, ' Mpc^{-1}'
-  
+
   write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K FOR THE CURRENT MODE IS : ', wavenumber_k, ' Mpc^{-1}'
 
   If (wavenumber_k .lt. conformal_Hubble_parameter(final_scale_factor)/speedL) then
@@ -248,6 +324,10 @@ Program time_evolution
      write(UNIT_OUTPUT_FILE,*) '# scale_factor        \delta_m             \delta_de             v_m        '//trim(' ')//&
           'v_de            \phi                 \psi'
 
+  Else if (MG_parametrisation .eq. 'Savvas') then
+
+     write(UNIT_OUTPUT_FILE,*) '# scale_factor    \delta_m    V_m    \phi_+    \chi'
+
   Else
 
      write(UNIT_OUTPUT_FILE,*) '# scale_factor        \delta_m             \delta_de             V_m        '//trim(' ')//&
@@ -259,55 +339,73 @@ Program time_evolution
   ! SETTING INITIAL CONDITIONS FOR THE PERTURBATIONS USING DOMENICO AND MARTIN'S SOLUTION
   !######################################################################################
 
-  Y(1) = matter_density_perturbation(X,wavenumber_k) ! MATTER DENSITY PERTURBATIONS
-  
-  Y(3) = matter_velocity_perturbation(X,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
+  If (MG_parametrisation .eq. 'Savvas') then
 
-  If ( (effective_sound_speed_squared(X,wavenumber_k) .eq. 0.d0) .or. &
-       ( (wavenumber_k/conformal_Hubble_parameter(X))**2 .lt. &
-       abs( 1.d0/effective_sound_speed_squared(X,wavenumber_k) )  ) ) then
+     Y(1) = matter_density_perturbation(exp(X),wavenumber_k) ! MATTER DENSITY PERTURBATIONS
 
-     If (MG_parametrisation .eq. 'GR') then
+     Y(2) = matter_velocity_perturbation(exp(X),wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
 
-        Y(2) = dark_energy_density_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+     Y(3) = initial_condition_gravitational_potential(wavenumber_k) ! \phi_+
 
-        Y(4) = dark_energy_velocity_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+     Y(4) = 0.d0 ! \chi
 
-     Else
+  Else
 
-        Y(2) = dark_energy_density_perturbation(X,Y(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
-        !Y(2) = dark_energy_density_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES`
-        !Y(4) = (1.d0 + equation_of_state(X))*dark_energy_velocity_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
-        Y(4) = dark_energy_velocity_perturbation(X,Y(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+     Y(1) = matter_density_perturbation(X,wavenumber_k) ! MATTER DENSITY PERTURBATIONS
+
+     Y(3) = matter_velocity_perturbation(X,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
+
+     If ( (effective_sound_speed_squared(X,wavenumber_k) .eq. 0.d0) .or. &
+          ( (wavenumber_k/conformal_Hubble_parameter(X))**2 .lt. &
+          abs( 1.d0/effective_sound_speed_squared(X,wavenumber_k) )  ) ) then
+
+        If (MG_parametrisation .eq. 'GR') then
+
+           Y(2) = dark_energy_density_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+           Y(4) = dark_energy_velocity_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+        Else
+
+           Y(2) = dark_energy_density_perturbation(X,Y(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+           !Y(2) = dark_energy_density_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES`
+           !Y(4) = (1.d0 + equation_of_state(X))*dark_energy_velocity_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+           Y(4) = dark_energy_velocity_perturbation(X,Y(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+        End if
+
+        write(UNIT_EXE_FILE,*) 'CURRENT MODEL IS SUPER-SOUND-HORIZON AT THE INITIAL SCALE FACTOR'
+
+     Else if ( (wavenumber_k/conformal_Hubble_parameter(X))**2 .gt. abs( 1.d0/effective_sound_speed_squared(X,wavenumber_k) ) ) Then
+
+        If (MG_parametrisation .eq. 'GR') then
+
+           Y(2) = de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+
+           Y(4) = de_velocity_perturbation_sub_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+
+        Else
+
+           Y(2) = dark_energy_density_perturbation(X,Y(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB HORIZON SCALES
+
+           !Y(4) = (1.d0 + equation_of_state(X))*de_velocity_perturbation_sub_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+           Y(4) = dark_energy_velocity_perturbation(X,Y(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB HORIZON SCALES
+
+        End if
+
+        write(UNIT_EXE_FILE,*) 'CURRENT MODE IS SUB-SOUND-HORIZON AT THE INITIAL SCALE FACTOR'
+
+     End If
+
+     If (MG_parametrisation .eq. 'HS_Basilakos') then
+
+        Y(5) = initial_condition_gravitational_potential(wavenumber_k)
+        
+        Y(6) = initial_condition_gravitational_potential(wavenumber_k)
 
      End if
 
-     write(UNIT_EXE_FILE,*) 'CURRENT MODEL IS SUPER-SOUND-HORIZON AT THE INITIAL SCALE FACTOR'
-
-  Else if ( (wavenumber_k/conformal_Hubble_parameter(X))**2 .gt. abs( 1.d0/effective_sound_speed_squared(X,wavenumber_k) ) ) Then
-
-     If (MG_parametrisation .eq. 'GR') then
-
-        Y(2) = de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
-
-        Y(4) = de_velocity_perturbation_sub_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
-
-     Else
-
-        Y(2) = dark_energy_density_perturbation(X,Y(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB HORIZON SCALES
-
-        !Y(4) = (1.d0 + equation_of_state(X))*de_velocity_perturbation_sub_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
-        Y(4) = dark_energy_velocity_perturbation(X,Y(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB HORIZON SCALES
-
-     End if
-
-     write(UNIT_EXE_FILE,*) 'CURRENT MODE IS SUB-SOUND-HORIZON AT THE INITIAL SCALE FACTOR'
-
-  End If
-
-  Y(5) = initial_condition_gravitational_potential(wavenumber_k)
-
-  Y(6) = initial_condition_gravitational_potential(wavenumber_k)
+  End if
 
   !################################################################################################################
   ! SOLUTIONS ON BOTH SUPER-HORIZON AND SUB-HORIZON SCALES FOR DARK ENERGY PERTURBATIONS IN MATTER DOMINATED REGIME
@@ -343,6 +441,25 @@ Program time_evolution
         write(UNIT_EXE_FILE,*) 'EFFECTIVE SQUARE SOUND SPEED IS NEGATIVE. NOT ANALYTICAL SOLUTIONS WRITTEN'
 
      End If
+
+  Else if (MG_parametrisation .eq. 'Savvas') then
+
+     write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
+
+        write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_m    V_m'
+
+        Do m=1,100
+
+           Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
+                log10(initial_scale_factor))/real(100-1))
+
+           ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM DRAFT
+           write(UNIT_OUTPUT_FILE2,91) Z,matter_density_perturbation(Z,wavenumber_k),&
+                matter_velocity_perturbation(Z,wavenumber_k)/wavenumber_k
+
+91         Format(E20.10,E20.10,E20.10)
+
+        End do
 
   Else
 
@@ -382,13 +499,21 @@ Program time_evolution
   ! ENDPOINT INTEGRATION, TOLERANCE FOR SOLUTIONS, INITIAL STEPSIZE
   !################################################################
 
-  XEND = final_scale_factor ! ENDPOINT OF INTEGRATION                                           
+  If (MG_parametrisation .eq. 'Savvas') then
 
-  RTOL = 1.d-14             ! REQUIRED TOLERANCE
-  ATOL = 1.0d-10*RTOL       ! REQUIRED TOLERANCE 
+     XEND = final_scale_factor ! ENDPOINT OF INTEGRATION                                           
+
+  Else
+
+     XEND = final_scale_factor ! ENDPOINT OF INTEGRATION                                           
+
+  End if
+
+  RTOL = 1.d-12             ! REQUIRED TOLERANCE
+  ATOL = 1.d-1*RTOL!  0*RTOL       ! REQUIRED TOLERANCE 
   ITOL = 0                  ! REQUIRED TOLERANCE                                     
                                                
-  H = 1.d-25                ! INITIAL STEP SIZE
+  H = 1.d-6                ! INITIAL STEP SIZE
 
   DO I=1,20                 ! SET DEFAULT VALUES                                                
 
@@ -421,14 +546,12 @@ End Program time_evolution
 SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN) 
   ! --- PRINTS SOLUTION AT EQUIDISTANT OUTPUT-POINTS BY USING "CONTR5"
 
-  use functions
+  use perturbations
   use fiducial    
 
   IMPLICIT REAL*8 (A-H,O-Z)
-  DIMENSION Y(N),CONT(LRC),RPAR(number_of_parameters) 
+  DIMENSION Y(N),CONT(LRC),RPAR(number_of_parameters)
   COMMON /INTERN/XOUT 
-
-
 
   IF (NR.EQ.1) THEN 
 
@@ -438,14 +561,22 @@ SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN)
              phi(X,wavenumber_k,Y(1),Y(2),Y(3),Y(4)),psi(X,wavenumber_k,Y(1),Y(2),Y(3),Y(4)),&
              derivative_matter_perturbation(X,Y(1),Y(2),Y(3),Y(4),Y(5),Y(6))
 
+        XOUT = initial_scale_factor 
+
+     Else if (MG_parametrisation .eq. 'Savvas') then
+        
+        WRITE (UNIT_OUTPUT_FILE,99) X,Y(1),Y(2)/wavenumber_k,Y(3),Y(4)
+
+        XOUT = initial_scale_factor 
+
      Else
 
         WRITE (UNIT_OUTPUT_FILE,99) X,Y(1),Y(2),Y(3),Y(4),Y(5),Y(6),&
              derivative_matter_perturbation(X,Y(1),Y(2),Y(3),Y(4),Y(5),Y(6))
         
-     End if
+        XOUT = initial_scale_factor 
 
-     XOUT = initial_scale_factor 
+     End if
 
   ELSE 
 
@@ -469,6 +600,11 @@ SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN)
                 CONTR5(2,XOUT,CONT,LRC),CONTR5(3,XOUT,CONT,LRC),CONTR5(4,XOUT,CONT,LRC),&
                 CONTR5(5,XOUT,CONT,LRC),CONTR5(6,XOUT,CONT,LRC))
 
+        Else if (MG_parametrisation .eq. 'Savvas') then
+
+           WRITE (UNIT_OUTPUT_FILE,100) XOUT,CONTR5(1,XOUT,CONT,LRC),CONTR5(2,XOUT,CONT,LRC)/wavenumber_k,&    
+                CONTR5(3,XOUT,CONT,LRC),CONTR5(4,XOUT,CONT,LRC)
+
         Else
 
            WRITE (UNIT_OUTPUT_FILE,99) XOUT,CONTR5(1,XOUT,CONT,LRC),CONTR5(2,XOUT,CONT,LRC),&    
@@ -479,26 +615,54 @@ SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN)
 
         End if
 
-        If (XOUT .lt. 1.d-4) then
+        If (MG_parametrisation .eq. 'Savvas') then
 
-           XOUT = XOUT + 1.0d-6              
+           If (XOUT .lt. log(1.d-4) ) then
 
-        Else if (XOUT .lt. 1.d-3) then
-           
-           XOUT = XOUT + 1.d-5 
+              XOUT = XOUT + log(1.0d-6)              
 
-        Else if (XOUT .lt. 1.d-2) then
-           
-           XOUT = XOUT + 1.d-4 
-           
-        Else if (XOUT .lt. 1.d-1) then
+           Else if (XOUT .lt. log(1.d-3) ) then
 
-           XOUT = XOUT + 1.d-3 
+              XOUT = XOUT + log(1.d-5) 
 
-        Else if (XOUT .le. 1.d0) then
+           Else if (XOUT .lt. log(1.d-2) ) then
 
-           XOUT = XOUT + 1.d-3 
-           
+              XOUT = XOUT + log(1.d-4) 
+
+           Else if (XOUT .lt. log(1.d-1) ) then
+
+              XOUT = XOUT + log(1.d-3) 
+
+           Else if (XOUT .le. log(1.d0)) then
+
+              XOUT = XOUT + log(1.d-3) 
+
+           End if
+
+        Else
+
+           If (XOUT .lt. 1.d-4) then
+
+              XOUT = XOUT + 1.0d-6              
+
+           Else if (XOUT .lt. 1.d-3) then
+
+              XOUT = XOUT + 1.d-5 
+
+           Else if (XOUT .lt. 1.d-2) then
+
+              XOUT = XOUT + 1.d-4 
+
+           Else if (XOUT .lt. 1.d-1) then
+
+              XOUT = XOUT + 1.d-3 
+
+           Else if (XOUT .le. 1.d0) then
+
+              XOUT = XOUT + 1.d-3 
+
+           End if
+
         End if
 
         GOTO 10 
@@ -508,6 +672,8 @@ SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN)
   END IF
 
 99 FORMAT(E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,ES20.10)
+
+100 FORMAT(E20.10,E20.10,E20.10,E20.10,E20.10)
  
   RETURN 
 
@@ -516,7 +682,8 @@ END SUBROUTINE SOLOUT
 subroutine RHSPER(N,X,Y,F,RPAR,IPAR)
            
   use fiducial
-  use functions
+  use background
+  use perturbations
 
   IMPLICIT REAL*8 (A-H,O-Z)
   Dimension Y(N),F(N),RPAR(number_of_parameters)
@@ -648,6 +815,28 @@ subroutine RHSPER(N,X,Y,F,RPAR,IPAR)
 
         stop
 
+     Else if (MG_parametrisation .eq. 'Savvas') then
+
+        F(1) = -Y(2)/conformal_Hubble_parameter(X)/X - 3.d0*H0**2*Omega_m/X**3/conformal_Hubble_parameter(X)**2/F_MG_prime(X)*(&
+             Y(1) + 3.d0*conformal_Hubble_parameter(X)*Y(2)/wavenumber_k**2 ) - ( 3.d0/X + &
+             2.d0*wavenumber_k**2*F_MG(X)/conformal_Hubble_parameter(X)**2/F_MG_prime(X)/X**2 )*Y(3) + &
+             ( 3.d0/2.d0/F_MG(X)/X + 9.d0*Omega_m/(Omega_m + (1.d0 - Omega_m )*X**3  )/F_MG_prime(X)/X**2/2.d0 )*Y(4)
+
+        F(2) = wavenumber_k**2*Y(3)/conformal_Hubble_parameter(X)/X - Y(2) - &
+             wavenumber_k**2*Y(4)/conformal_Hubble_parameter(X)/2.d0/F_MG(X)/X
+
+        F(3) = 3.d0*H0**2*Omega_m*Y(2)/X**2/conformal_Hubble_parameter(X)/F_MG(X)/wavenumber_k**2 - &
+             ( 1.d0/X + F_MG_prime(X)/2.d0/F_MG(X) )*Y(3) + 3.d0*F_MG_prime(X)*Y(4)/4.d0/F_MG(X)**2
+
+        F(4) = -2.d0*H0**2*Omega_m*F_MG(X)/X**3/conformal_Hubble_parameter(X)**2/F_MG_prime(X)*( &
+             Y(1) + 3.d0*conformal_Hubble_parameter(X)*Y(2)/wavenumber_k**2 ) - &
+             3.d0*H0**2*Omega_m*Y(2)/X**2/wavenumber_k**2/conformal_Hubble_parameter(X) + &
+             ( 1.d0/X - F_MG_prime(X)/2.d0/F_MG(X) + 3.d0*F_MG(X)*Omega_m/F_MG_prime(X)/X**2/(Omega_m + &
+             (1.d0 - Omega_m)*X**3 ) )*Y(4) + ( F_MG_prime(X) - &
+             4.d0*F_MG(X)**2*wavenumber_k**2/3.d0/F_MG_prime(X)/X**2/conformal_Hubble_parameter(X)**2 )*Y(3)
+
+!        write(UNIT_EXE_FILE,*) X, F(:)
+
      Else
 
         write(UNIT_EXE_FILE,*) 'UNKNOWN MG PARAMETRISATION'
@@ -660,7 +849,7 @@ end subroutine RHSPER
 
 subroutine JRHSPER(N,X,Y,DFY,LDFY,RPAR,IPAR)
 
-           use functions
+!           use functions
            use fiducial
 
            IMPLICIT REAL*8 (A-H,O-Z)
@@ -669,8 +858,9 @@ subroutine JRHSPER(N,X,Y,DFY,LDFY,RPAR,IPAR)
 end subroutine JRHSPER
 
 Subroutine MAS(N,AM,LMAS,RPAR,IPAR,X)
-  
-  use functions
+
+  use background
+  use perturbations
   use fiducial 
 
   IMPLICIT REAL*8 (A-H,O-Z)

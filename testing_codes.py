@@ -3,9 +3,9 @@ mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as py
 
-a,w,wprime,H,cs2,ceff2,Omegam,OmegaDE,dprho,dm,Vm,dde,Vde,pi,GeffGN,Qeff = np.loadtxt('./output/functions.txt',unpack=True,usecols=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15])
+a,w,wprime,H,cs2,ceff2,Omegam,OmegaDE,dprho,dm,Vm,dde,Vde,pi,GeffGN,Qeff,ca2,x = np.loadtxt('./output/functions.txt',unpack=True,usecols=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17])
 
-am4,dmm4,dem4,vmm4,vdem4,phim4,psim4,dmprime = np.loadtxt('./output/numerical_solution.txt',unpack=True,usecols=[0,1,2,3,4,5,6,7])
+#am4,dmm4,dem4,vmm4,vdem4,phim4,psim4,dmprime = np.loadtxt('./output/numerical_solution.txt',unpack=True,usecols=[0,1,2,3,4,5,6,7])
 
 fig = py.figure()
 
@@ -91,12 +91,13 @@ py.close()
 
 fig = py.figure()
 
-labels_velocities = (r'$c_{s}^2$',r'$c_{eff}^2$')
+labels_velocities = (r'$c_{s}^2$',r'$c_{eff}^2$',r'$c_a^2$')
 
 # Velocities
 
 py.semilogx(a,cs2,color='red')
 py.semilogx(a,ceff2,color='blue')
+py.semilogx(a,ca2,color='black')
 
 py.xlabel(r'$a$',fontsize='large')
 
@@ -170,6 +171,24 @@ py.xlabel(r'$a$',fontsize='large')
 py.legend(labels_Qeff,loc=0)
 
 py.savefig('./output/testing_codes_Qeff.pdf')
+
+py.close()
+
+fig = py.figure()
+
+labels_X = (r'$X$')
+
+# X
+
+py.loglog(a,abs(x))
+
+py.xlabel(r'$a$',fontsize='large')
+
+#py.ylim(0.1,2)
+
+py.legend(labels_X,loc=0)
+
+py.savefig('./output/testing_codes_X.pdf')
 
 py.close()
 
