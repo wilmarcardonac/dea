@@ -28,7 +28,7 @@ Module fiducial
   Real*8,parameter :: ks = 1.065d-2*h_factor    ! Mpc^{-1}
   Real*8,parameter :: lower_limit_ks = 1.d-1
   Real*8,parameter :: upper_limit_ks = 1.d-1
-  Real*8,parameter :: wavenumber_k = 4.d2*H0 !5.d2*H0   !5.d-2 !3.d2*H0 !1.5d-2 !1.d3*H0 ! in Mpc^{-1}
+  Real*8,parameter :: wavenumber_k = 1.5d-2 !2.d2*H0 !5.d2*H0   !5.d-2 !3.d2*H0 !1.5d-2 !1.d3*H0 ! in Mpc^{-1}
   Real*8,parameter :: Omega_m = (omega_b + omega_cdm)/h_factor**2   ! MATTER
   Real*8,parameter :: n_s = 9.619d-1      ! SPECTRAL INDEX
   Real*8,parameter :: A_s = 2.12424d-9    ! AMPLITUDE SCALAR PERTURBATIONS
@@ -55,7 +55,7 @@ Module fiducial
   Integer*4,parameter    :: DEA_MODEL = 1 ! 1: DEA MODEL ONLY INCLUDING e_pi; 2: DEA MODEL INCLUDING f_pi and g_pi; 3: DEA MODEL INCLUDING e_pi, f_pi, g_pi 
   Integer*4,parameter    :: number_DEA_parameters = DEA_MODEL ! NUMBER OF DEA MODEL PARAMETERS
   Integer*4,parameter    :: number_of_parameters = 7
-  Integer*4,parameter    :: dimension_system_ode = 4 ! 4: GR, Savvas; 6: HS_Basilakos 
+  Integer*4,parameter    :: dimension_system_ode = 4 ! 4: GR_DE, Savvas, GR_LAMBDA, HS_Basilakos, Starobinsky_Basilakos; 6: GR_DE, HS_Basilakos, Starobinsky_Basilakos, Savvas 
   Integer*4,parameter    :: UNIT_EXE_FILE = 91 
   Integer*4,parameter    :: UNIT_OUTPUT_FILE = 92
   Integer*4,parameter    :: UNIT_OUTPUT_FILE2 = 93
@@ -67,7 +67,14 @@ Module fiducial
   Real*8,parameter :: final_scale_factor = 1.d0
   Real*8,parameter :: switch_off_pressure_perturbation_terms = 1.d1
 
-  Character(len=*),parameter :: MG_parametrisation = 'Savvas' !'HS_Basilakos' ! 'HS_Basilakos', 'Starobinsky_Basilakos', 'GR_LAMBDA', 'Savvas', 'GR_DE'... 
+  Character(len=*),parameter :: MG_parametrisation = 'HS_Basilakos' !'GR_DE' !'HS_Basilakos' ! 'HS_Basilakos', 'Starobinsky_Basilakos', 'GR_LAMBDA', 'Savvas', 'GR_DE'... 
+  Character(len=*),parameter :: approach = 'CHI' ! 'EF' STANDS FOR EFFECTIVE FLUID; CHI: CODE WILL SOLVE THE SYSTEM INCLUDING \chi and \Phi_+
+
+  !##############################
+  ! ARRAY FOR  INITIAL CONDITIONS
+  !##############################
+
+  Real*8,dimension(dimension_system_ode) :: initial_conditions_system 
 
   !##############
   ! PATH TO FILES

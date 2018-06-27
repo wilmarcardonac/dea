@@ -7,7 +7,7 @@ F_FL   = -O3 -Wall -I$(INCDIR) -DGFORTRAN -fno-second-underscore -fopenmp -fPIC 
 LIB_FL = -L$(LIBDIR) -lfgsl 
 
 #####################
-OBJ   = fiducial.o background.o initial_conditions.o perturbations.o diff_asde.o radau5.o decsol.o dc_decsol.o 
+OBJ   = fiducial.o input.o background.o initial_conditions.o perturbations.o diff_asde.o radau5.o decsol.o dc_decsol.o 
 
 def:	$(OBJ) $(OBJNR) $(OBJODE)
 	$(LC) $(F_FL) $(OBJ) $(OBJNR) $(OBJODE) -o $(EXE)  $(LIB_FL)
@@ -26,4 +26,4 @@ clean :
 
 ### put dependencies here ###
 
-diff_asde.o :	diff_asde.f90 fiducial.o background.o initial_conditions.o perturbations.o   
+diff_asde.o :	diff_asde.f90 fiducial.o input.o background.o initial_conditions.o perturbations.o   

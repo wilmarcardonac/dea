@@ -6,6 +6,7 @@ Program time_evolution
 
   use fgsl
   use fiducial
+  use input
   use background
   use initial_conditions
   use perturbations
@@ -18,12 +19,10 @@ Program time_evolution
 
   Integer :: m   ! VARIABLE HOLDING INDEX IN LOOPS
 
-  Logical :: dir_exist ! CHECK EXISTENCE OF FILES
-
   ! PARAMETERS FOR RADAU5 (FULL JACOBIAN)                             
   
   PARAMETER (ND=dimension_system_ode,LWORK=4*ND*ND+12*ND+20,LIWORK=3*ND+20) ! ND SEEMS TO BE THE NUMBER OF VARIABLES WHICH IN OUR CASE COINCIDES WITH 
-  ! MATTER AND DARK ENERGY PERTURBATIONS: \delta_cdm, \delta_de, \theta_m, \theta_de
+  ! MATTER AND DARK ENERGY PERTURBATIONS: \delta_cdm, \delta_de, \theta_m, \theta_de. ALSO POTENTIALS: \Phi, \Psi, \Phi_+, \chi
   DIMENSION Y(ND),WORK(LWORK),IWORK(LIWORK),RPAR(number_of_parameters)      ! Y IS AN ARRAY HOLDING THE PERTURBATION VARIABLES, RPAR HOLDS PARAMETERS 
   ! IN THE SYSTEM OF DIFFERENTIAL EQUATIONS 
   EXTERNAL RHSPER,JRHSPER,SOLOUT,MAS                         ! SUBROUTINES FROM THE SOLVER
@@ -32,144 +31,14 @@ Program time_evolution
   ! ASSIGMENTS AND INITIALIZATION OF VARIABLES
   !###########################################
 
-  inquire(file='./output',exist=dir_exist)
+  call test_input_parameters()
 
-  If (dir_exist) then
+  call check_effective_sound_speed_squared()
 
-     continue
-
-  Else
-
-     call system('mkdir output')
-
-  End if
-
-  open(UNIT_EXE_FILE,file=Execution_information)
-
-  open(UNIT_OUTPUT_FILE,file=NUMERICAL_SOLUTION)
-
-  open(UNIT_OUTPUT_FILE2,file=ANALYTICAL_SOLUTION)
-
-!  print *, F_MG_savvas(final_scale_factor)
-!  print *, ricci_scalar(final_scale_factor),6.d0*(H0**2 + H0 - H0*3.d0*Omega_m/2.d0 )
-!  print *, ricci_scalar(final_scale_factor)/(ricci_scalar(final_scale_factor)-3.d0*Lambda)
-!  print *, fgsl_sf_hyperg_2f1(a,b,c,1.4586376458477734d-4)
-!  print *, Lambda/(ricci_scalar(final_scale_factor)-3.d0*Lambda)
-!  print *, fgsl_sf_hyperg_2f1(1.E0_fgsl_double,1.E0_fgsl_double,1.E0_fgsl_double,1.E-1_fgsl_double)
-!  print *, fgsl_sf_hyperg_2f1(1.d0,1.d0,1.d0,1.d-1)
 !  call test_function()
 !  call test_approximations()
-
-  call compute_background()
-
-  stop
-
-  write(UNIT_EXE_FILE,*) 'STARTING ANALYSIS. PARAMETERS FOR CURRENT RUN ARE AS FOLLOWS: '
-
-  If (MG_parametrisation .eq. 'GR') then
-
-     write(UNIT_EXE_FILE,*) 'EQUATION OF STATE: ', w0_fld
-
-     write(UNIT_EXE_FILE,*) 'MATTER DENSITY PARAMETER: ', Omega_m
-
-     write(UNIT_EXE_FILE,*) 'SOUND SPEED SQUARED: ', cs2_fld 
-
-     write(UNIT_EXE_FILE,*) 'WAVENUMBER: ', wavenumber_k, ' Mpc^{-1}'
-
-     write(UNIT_EXE_FILE,*) 'DEA PARAMETER e_\pi : ', e_pi
-
-     write(UNIT_EXE_FILE,*) 'DEA PARAMETER f_\pi : ', f_pi
-
-     write(UNIT_EXE_FILE,*) 'DEA PARAMETER g_\pi : ', g_pi
-
-  Else if (MG_parametrisation .eq. 'Savvas') then
-
-     write(UNIT_EXE_FILE,*) 'IN THIS f(R) PARAMETRISATION THE EQUATION OF STATE DOES NOT EVOLVE WITH TIME. IN FACT, IT IS -1'
-
-     write(UNIT_EXE_FILE,*) 'MATTER DENSITY PARAMETER: ', Omega_m
-
-     write(UNIT_EXE_FILE,*) 'WAVENUMBER: ', wavenumber_k, ' Mpc^{-1}'
-
-     write(UNIT_EXE_FILE,*) 'MG PARAMETER alpha : ', alpha
-
-     write(UNIT_EXE_FILE,*) 'DEA EVOLVES WITH TIME : '
-
-  Else
-
-     write(UNIT_EXE_FILE,*) 'EQUATION OF STATE EVOLVES WITH TIME'
-
-     write(UNIT_EXE_FILE,*) 'MATTER DENSITY PARAMETER: ', Omega_m
-
-     write(UNIT_EXE_FILE,*) 'SOUND SPEED SQUARED EVOLVES WITH TIME'
-
-     write(UNIT_EXE_FILE,*) 'WAVENUMBER: ', wavenumber_k, ' Mpc^{-1}'
-
-     write(UNIT_EXE_FILE,*) 'MG PARAMETER b : ', b_fR
-
-     write(UNIT_EXE_FILE,*) 'DEA EVOLVES WITH TIME : '
-
-  End if
-
-  If (MG_parametrisation .eq. 'HS_Basilakos') then
-
-     write(UNIT_EXE_FILE,*) 'CURRENT ANALYSIS USES HU & SAWICKI PARAMETRISATION FROM BASILAKOS ET AL.'
-
-  Else if (MG_parametrisation .eq. 'Starobinsky_Basilakos') then
-
-     write(UNIT_EXE_FILE,*) 'CURRENT ANALYSIS USES STAROBINSKY PARAMETRISATION FROM BASILAKOS ET AL.'
-
-     write(UNIT_EXE_FILE,*) 'NOT IMPLEMENTED YET'
-
-     stop
-
-  Else if (MG_parametrisation .eq. 'Savvas') then
-
-     write(UNIT_EXE_FILE,*) 'THE f(R) PARAMETRISATION USED IN THIS ANALYSIS IS GIVEN IN SAVVAS PAPER 1309.1055 [Eq. (2.14)]'
-
-  Else if (MG_parametrisation .eq. 'GR') then
-
-     write(UNIT_EXE_FILE,*) 'CURRENT ANALYSIS ASSUMES GENERAL RELATIVITY'
-
-  Else
-
-     write(UNIT_EXE_FILE,*) 'SELECTED MG PARAMETRISATION IS NOT IMPLEMENTED. CODE WILL STOP'
-
-     stop
-
-  End if
-
-  If (MG_parametrisation .eq. 'Savvas') then
-
-     write(UNIT_EXE_FILE,*) 'EFFECTIVE FLUID APPROACH HAS NOT YET BEEN IMPLEMENTED'
-
-  Else
-
-     If ( effective_sound_speed_squared(initial_scale_factor,wavenumber_k) .ge. 0 ) Then
-
-        write(UNIT_EXE_FILE,*) 'AT INITIAL SCALE FACTOR a = ', initial_scale_factor
-
-        write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS : ', &
-             effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
-
-        write(UNIT_EXE_FILE,*) 'AT FINAL SCALE FACTOR a = ', final_scale_factor
-
-        write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS : ', &
-             effective_sound_speed_squared(final_scale_factor,wavenumber_k)
-
-     Else
-
-        write(UNIT_EXE_FILE,*) 'AT ONSET EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS NEGATIVE: ',&
-             effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
-
-        write(UNIT_EXE_FILE,*) 'AND WILL POSSIBLY LEAD TO INSTABILITIES IN THE PERTURBATIONS'
-
-        write(UNIT_EXE_FILE,*) 'TODAY EFFECTIVE SOUND SPEED SQUARED FOR CURRENT MODEL IS: ', &
-             effective_sound_speed_squared(final_scale_factor,wavenumber_k)
-
-     End If
-
-  End if
-
+!  call compute_background()
+!  stop
   !##############################################################################################################################
   ! INPUT PARAMETERS FOR THE SUBROUTINE SOLVING THE SYSTEM. LOOK INSIDE 'radau5.f90 TO GET THE CORRECT MEANING FOR EACH PARAMETER
   !##############################################################################################################################
@@ -184,336 +53,15 @@ Program time_evolution
         
   IOUT = 1 ! OUTPUT ROUTINE IS USED DURING INTEGRATION                         
 
-  If (MG_parametrisation .eq. 'Savvas') then
+  X = initial_scale_factor  ! STARTING POINT INTEGRATION
 
-     X = initial_scale_factor 
- 
-     write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS ARE SET AT a : ', X
+  XEND = final_scale_factor ! ENDPOINT OF INTEGRATION                                           
 
-  Else
-
-     X = initial_scale_factor  ! INITIAL VALUE OF THE SCALE FACTOR
-
-     write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS ARE SET AT SCALE FACTOR : ', X
-
-  End if
-
-  write(UNIT_EXE_FILE,*) 'SYSTEM OF DIFFERENTIAL EQUATIONS IS WRITTEN IN THE CODE AS FOLLOWS: '
-
-  write(UNIT_EXE_FILE,*) 'Y(1) IS \delta_m, MATTER DENSITY PERTURBATION '
-
-  If (MG_parametrisation .eq. 'GR') then
-
-     write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
-
-     write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
-
-     write(UNIT_EXE_FILE,*) 'Y(4) IS \theta_de, DARK ENERGY VELOCITY PERTURBATION '
-
-  Else if (MG_parametrisation .eq. 'Savvas') then
-
-     write(UNIT_EXE_FILE,*) 'Y(2) IS \theta_m, MATTER VELOCITY PERTURBATION '
-
-     write(UNIT_EXE_FILE,*) 'Y(3) IS \phi_+ , POTENTIAL \phi_+ '
-
-     write(UNIT_EXE_FILE,*) 'Y(4) IS \chi, POTENTIAL \chi '
-
-  Else
-
-     write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
-
-     write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
-
-     write(UNIT_EXE_FILE,*) 'Y(4) IS (1+wDE)*\theta_de, DARK ENERGY VELOCITY PERTURBATION '
-
-     write(UNIT_EXE_FILE,*) 'Y(5) IS \phi, POTENTIAL \phi '
-
-     write(UNIT_EXE_FILE,*) 'Y(6) IS \psi, POTENTIAL \psi '
-
-  End if
-
-  If (MG_parametrisation .eq. 'Savvas') then
-
-     write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER H(a) AT a ', X, ' IS : ',&
-          conformal_Hubble_parameter(X), ' Mpc^{-1}'
-
-     write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT INITIAL SCALE FACTOR ', &
-          X, ' IS : ', conformal_Hubble_parameter(X)/speedL, ' Mpc^{-1}'
-
-     If (wavenumber_k .lt. conformal_Hubble_parameter(X)/speedL) then
-
-        write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS BEYOND THE HORIZON (SUPER-HORIZON)'
-
-     Else
-
-        write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS INSIDE THE HORIZON (SUB-HORIZON)'
-
-     End if
-  
-  Else
-
-     write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER H(a) AT ', X, ' IS : ',conformal_Hubble_parameter(X), ' Mpc^{-1}'
-
-     write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT INITIAL SCALE FACTOR ', X, ' IS : ',&
-          conformal_Hubble_parameter(X)/speedL, ' Mpc^{-1}'
-
-     If (wavenumber_k .lt. conformal_Hubble_parameter(X)/speedL) then
-
-        write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS BEYOND THE HORIZON (SUPER-HORIZON)'
-
-     Else
-
-        write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS INSIDE THE HORIZON (SUB-HORIZON)'
-
-     End if
-     
-  End if
-
-  If ( wavenumber_k/ks .lt. lower_limit_ks ) then
-
-     write(UNIT_EXE_FILE,*) 'MODE IS GREATER THAN SOUND HORIZON AT MATTER-RADIATION EQUALITY'
-
-  Else if ( wavenumber_k/ks .gt. upper_limit_ks ) then
-
-     write(UNIT_EXE_FILE,*) 'MODE IS SMALLER THAN SOUND HORIZON AT MATTER-RADIATION EQUALITY'
-
-  Else
-
-     write(UNIT_EXE_FILE,*) 'MODE DOES NOT SATISFY CONDITION FOR INITIAL POTENTIAL'
-
-     stop
-
-  End if
-
-  write(UNIT_EXE_FILE,*) 'INITIAL VALUE FOR POTENTIAL IS: ',initial_condition_gravitational_potential(wavenumber_k)
-
-  write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER AT THE PRESENT TIME IS : ',conformal_Hubble_parameter(final_scale_factor),&
-       ' Mpc^{-1}'
-
-  write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT THE PRESENT TIME IS : ', &
-       conformal_Hubble_parameter(final_scale_factor)/speedL, ' Mpc^{-1}'
-
-  write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K FOR THE CURRENT MODE IS : ', wavenumber_k, ' Mpc^{-1}'
-
-  If (wavenumber_k .lt. conformal_Hubble_parameter(final_scale_factor)/speedL) then
-
-     write(UNIT_EXE_FILE,*) 'CURRENT MODE ENDS BEYOND THE HORIZON (SUPER-HORIZON)'
-
-  Else
-
-     write(UNIT_EXE_FILE,*) 'CURRENT MODE ENDS INSIDE THE HORIZON (SUB-HORIZON)'
-
-     write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
-          scale_factor_horizon_crossing(wavenumber_k) 
-
-     If (MG_parametrisation .eq. 'GR') then
-
-        write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE EFFECTIVE SOUND HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
-             scale_factor_effective_sound_horizon(X,wavenumber_k)
-
-     Else
-
-        continue
-
-     End if
-
-  End if
-  
-  If (MG_parametrisation .eq. 'GR') then
-
-     write(UNIT_OUTPUT_FILE,*) '# scale_factor        \delta_m             \delta_de             v_m        '//trim(' ')//&
-          'v_de            \phi                 \psi'
-
-  Else if (MG_parametrisation .eq. 'Savvas') then
-
-     write(UNIT_OUTPUT_FILE,*) '# scale_factor    \delta_m    V_m    \phi_+    \chi'
-
-  Else
-
-     write(UNIT_OUTPUT_FILE,*) '# scale_factor        \delta_m             \delta_de             V_m        '//trim(' ')//&
-          'V_de            \phi                 \psi  \delta_m_prime'
-
-  End if
-  
-  !######################################################################################
-  ! SETTING INITIAL CONDITIONS FOR THE PERTURBATIONS USING DOMENICO AND MARTIN'S SOLUTION
-  !######################################################################################
-
-  If (MG_parametrisation .eq. 'Savvas') then
-
-     Y(1) = matter_density_perturbation(exp(X),wavenumber_k) ! MATTER DENSITY PERTURBATIONS
-
-     Y(2) = matter_velocity_perturbation(exp(X),wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
-
-     Y(3) = initial_condition_gravitational_potential(wavenumber_k) ! \phi_+
-
-     Y(4) = 0.d0 ! \chi
-
-  Else
-
-     Y(1) = matter_density_perturbation(X,wavenumber_k) ! MATTER DENSITY PERTURBATIONS
-
-     Y(3) = matter_velocity_perturbation(X,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
-
-     If ( (effective_sound_speed_squared(X,wavenumber_k) .eq. 0.d0) .or. &
-          ( (wavenumber_k/conformal_Hubble_parameter(X))**2 .lt. &
-          abs( 1.d0/effective_sound_speed_squared(X,wavenumber_k) )  ) ) then
-
-        If (MG_parametrisation .eq. 'GR') then
-
-           Y(2) = dark_energy_density_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
-
-           Y(4) = dark_energy_velocity_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
-
-        Else
-
-           Y(2) = dark_energy_density_perturbation(X,Y(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
-           !Y(2) = dark_energy_density_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES`
-           !Y(4) = (1.d0 + equation_of_state(X))*dark_energy_velocity_perturbation_super_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
-           Y(4) = dark_energy_velocity_perturbation(X,Y(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
-
-        End if
-
-        write(UNIT_EXE_FILE,*) 'CURRENT MODEL IS SUPER-SOUND-HORIZON AT THE INITIAL SCALE FACTOR'
-
-     Else if ( (wavenumber_k/conformal_Hubble_parameter(X))**2 .gt. abs( 1.d0/effective_sound_speed_squared(X,wavenumber_k) ) ) Then
-
-        If (MG_parametrisation .eq. 'GR') then
-
-           Y(2) = de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
-
-           Y(4) = de_velocity_perturbation_sub_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
-
-        Else
-
-           Y(2) = dark_energy_density_perturbation(X,Y(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB HORIZON SCALES
-
-           !Y(4) = (1.d0 + equation_of_state(X))*de_velocity_perturbation_sub_sound_horizon(X,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
-           Y(4) = dark_energy_velocity_perturbation(X,Y(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB HORIZON SCALES
-
-        End if
-
-        write(UNIT_EXE_FILE,*) 'CURRENT MODE IS SUB-SOUND-HORIZON AT THE INITIAL SCALE FACTOR'
-
-     End If
-
-     If (MG_parametrisation .eq. 'HS_Basilakos') then
-
-        Y(5) = initial_condition_gravitational_potential(wavenumber_k)
-        
-        Y(6) = initial_condition_gravitational_potential(wavenumber_k)
-
-     End if
-
-  End if
-
-  !################################################################################################################
-  ! SOLUTIONS ON BOTH SUPER-HORIZON AND SUB-HORIZON SCALES FOR DARK ENERGY PERTURBATIONS IN MATTER DOMINATED REGIME
-  !################################################################################################################
-
-  If (MG_parametrisation .eq. 'GR') then
-
-     If ( effective_sound_speed_squared(X,wavenumber_k) .ge. 0) then
-
-        write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
-
-        write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_{de}^{sup-hor}    v_{de}^{sup-hor}   '//trim(' ')//&
-             '\delta_{de}^{sub-sound}    v_{de}^{sub-sound}'
-
-        Do m=1,101
-
-           Z=10.d0**(-5.d0+Real(m-1)/100.d0*5.d0)
-
-           ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM EQ. (3.3) IN MY PAPER, THAT IS, v_{de}.
-           write(UNIT_OUTPUT_FILE2,89) Z,dark_energy_density_perturbation_super_horizon(wavenumber_k),&
-                -dark_energy_velocity_perturbation_super_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/((1.d0+&
-                w0_fld)*sqrt(Z)*wavenumber_k),&
-                dark_energy_density_perturbation_sub_sound_horizon(Z,wavenumber_k),&
-                -dark_energy_velocity_perturbation_sub_sound_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/(wavenumber_k*(1.d0+&
-                w0_fld)*sqrt(Z))
-
-89         Format(E20.10,E20.10,E20.10,E20.10,E20.10)
-
-        End do
-
-     Else
-
-        write(UNIT_EXE_FILE,*) 'EFFECTIVE SQUARE SOUND SPEED IS NEGATIVE. NOT ANALYTICAL SOLUTIONS WRITTEN'
-
-     End If
-
-  Else if (MG_parametrisation .eq. 'Savvas') then
-
-     write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
-
-        write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_m    V_m'
-
-        Do m=1,100
-
-           Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
-                log10(initial_scale_factor))/real(100-1))
-
-           ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM DRAFT
-           write(UNIT_OUTPUT_FILE2,91) Z,matter_density_perturbation(Z,wavenumber_k),&
-                matter_velocity_perturbation(Z,wavenumber_k)/wavenumber_k
-
-91         Format(E20.10,E20.10,E20.10)
-
-        End do
-
-  Else
-
-        write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
-
-        write(UNIT_OUTPUT_FILE2,*) '# scale_factor  \delta_sub_horizon  V_sub_horizon  \delta_m  V_m  '&
-             'phi  psi'
-
-        Do m=1,100
-
-           Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
-                log10(initial_scale_factor))/real(100-1))
-
-           ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM DRAFT
-           write(UNIT_OUTPUT_FILE2,90) Z,dark_energy_density_perturbation(Z,&
-                matter_density_perturbation(Z,wavenumber_k)),&
-                dark_energy_velocity_perturbation(Z,&
-                matter_density_perturbation(Z,wavenumber_k)),&
-                matter_density_perturbation(Z,wavenumber_k),&
-                matter_velocity_perturbation(Z,wavenumber_k),&
-                phi(Z,wavenumber_k,matter_density_perturbation(Z,wavenumber_k),&
-                dark_energy_density_perturbation(Z,&
-                matter_density_perturbation(Z,wavenumber_k)),matter_velocity_perturbation(Z,wavenumber_k),&
-                dark_energy_velocity_perturbation(Z,matter_density_perturbation(Z,wavenumber_k))),&
-                psi(Z,wavenumber_k,matter_density_perturbation(Z,wavenumber_k),&
-                dark_energy_density_perturbation(Z,&
-                matter_density_perturbation(Z,wavenumber_k)),matter_velocity_perturbation(Z,wavenumber_k),&
-                dark_energy_velocity_perturbation(Z,matter_density_perturbation(Z,wavenumber_k)))
-
-90         Format(E20.10,E20.10,E20.10,ES20.10,ES20.10,ES20.10,ES20.10)
-
-        End do
-
-  End if
-
-  !################################################################
-  ! ENDPOINT INTEGRATION, TOLERANCE FOR SOLUTIONS, INITIAL STEPSIZE
-  !################################################################
-
-  If (MG_parametrisation .eq. 'Savvas') then
-
-     XEND = final_scale_factor ! ENDPOINT OF INTEGRATION                                           
-
-  Else
-
-     XEND = final_scale_factor ! ENDPOINT OF INTEGRATION                                           
-
-  End if
-
-  RTOL = 1.d-12             ! REQUIRED TOLERANCE
-  ATOL = 1.d-1*RTOL!  0*RTOL       ! REQUIRED TOLERANCE 
-  ITOL = 0                  ! REQUIRED TOLERANCE                                     
+  RTOL = 1.d-6              ! REQUIRED TOLERANCE
+  ATOL = 1.d-6*RTOL!  0*RTOL ! REQUIRED TOLERANCE 
+  ITOL = 0                   ! REQUIRED TOLERANCE                                     
                                                
-  H = 1.d-6                ! INITIAL STEP SIZE
+  H = 1.d-8                  ! INITIAL STEP SIZE
 
   DO I=1,20                 ! SET DEFAULT VALUES                                                
 
@@ -522,6 +70,24 @@ Program time_evolution
      WORK(I)=0.D0 
 
   END DO
+
+  !#################################################
+  ! SETTING INITIAL CONDITIONS FOR THE PERTURBATIONS
+  !#################################################
+
+  call set_initial_conditions()
+
+  Do m=1,dimension_system_ode
+
+     Y(m) = initial_conditions_system(m)
+
+  End do
+
+  !################################################
+  ! ANALYTICAL SOLUTIONS IN MATTER DOMINATED REGIME
+  !################################################
+
+  call write_analytical_solutions()
 
   !##############################################################
   ! CALL SUBROUTINE TO SOLVE THE SYSTEM OF DIFFERENTIAL EQUATIONS
@@ -533,7 +99,9 @@ Program time_evolution
   CALL RADAU5(N,RHSPER,X,Y,XEND,H,RTOL,ATOL,ITOL,JRHSPER,IJAC,MLJAC,MUJAC,MAS,IMAS,MLMAS,MUMAS,&
        SOLOUT,IOUT,WORK,LWORK,IWORK,LIWORK,RPAR,IPAR,IDID)         
 
-  !##############################################################
+  !##############
+  ! CLOSING FILES
+  !##############
 
   close(UNIT_EXE_FILE)
 
@@ -542,6 +110,14 @@ Program time_evolution
   close(UNIT_OUTPUT_FILE2)
 
 End Program time_evolution                                          
+
+!##################
+! MAIN PROGRAM ENDS
+!##################
+
+!############################
+! OUTPUTING SUBROUTINE STARTS
+!############################
 
 SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN) 
   ! --- PRINTS SOLUTION AT EQUIDISTANT OUTPUT-POINTS BY USING "CONTR5"
@@ -553,32 +129,37 @@ SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN)
   DIMENSION Y(N),CONT(LRC),RPAR(number_of_parameters)
   COMMON /INTERN/XOUT 
 
-  IF (NR.EQ.1) THEN 
+  If (NR.EQ.1) THEN 
 
-     If (MG_parametrisation .eq. 'GR') then
-
-        WRITE (UNIT_OUTPUT_FILE,99) X,Y(1),Y(2),Y(3)/wavenumber_k,Y(4)/wavenumber_k,&                        
-             phi(X,wavenumber_k,Y(1),Y(2),Y(3),Y(4)),psi(X,wavenumber_k,Y(1),Y(2),Y(3),Y(4)),&
-             derivative_matter_perturbation(X,Y(1),Y(2),Y(3),Y(4),Y(5),Y(6))
-
-        XOUT = initial_scale_factor 
-
-     Else if (MG_parametrisation .eq. 'Savvas') then
+     If (MG_parametrisation .eq. 'GR_DE') then
         
-        WRITE (UNIT_OUTPUT_FILE,99) X,Y(1),Y(2)/wavenumber_k,Y(3),Y(4)
+        If (dimension_system_ode .eq. 6) then
 
-        XOUT = initial_scale_factor 
+           WRITE (UNIT_OUTPUT_FILE,98) X,Y(1),Y(2),Y(3)/wavenumber_k,Y(4)/wavenumber_k,Y(5),Y(6)
 
-     Else
+        Else if (dimension_system_ode .eq. 4) then
+           
+           WRITE (UNIT_OUTPUT_FILE,100) X,Y(1),Y(2),Y(3)/wavenumber_k,Y(4)/wavenumber_k                        
+
+        End if
+
+     Else if ( ( ( (MG_parametrisation .eq. 'Savvas') .or. (MG_parametrisation .eq. 'GR_LAMBDA') ) .or. &
+         ( (MG_parametrisation .eq. 'HS_Basilakos') .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos')&
+         ) ) .and. (approach .eq. 'CHI') ) then
+        
+        WRITE (UNIT_OUTPUT_FILE,100) X,Y(1),Y(2)/wavenumber_k,Y(3),Y(4)
+
+     Else if ( ( ( MG_parametrisation .eq. 'Savvas' ) .or. ( (MG_parametrisation .eq. 'HS_Basilakos') &
+          .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) ) .and. (approach .eq. 'EF')  ) then
 
         WRITE (UNIT_OUTPUT_FILE,99) X,Y(1),Y(2),Y(3),Y(4),Y(5),Y(6),&
              derivative_matter_perturbation(X,Y(1),Y(2),Y(3),Y(4),Y(5),Y(6))
         
-        XOUT = initial_scale_factor 
-
      End if
 
-  ELSE 
+     XOUT = initial_scale_factor 
+
+  Else 
 
 10   CONTINUE 
 
@@ -586,26 +167,30 @@ SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN)
 
         ! --- CONTINUOUS OUTPUT FOR RADAU5                                      
 
-        If (MG_parametrisation .eq. 'GR') then
+        If (MG_parametrisation .eq. 'GR_DE') then
 
-           WRITE (UNIT_OUTPUT_FILE,99) XOUT,CONTR5(1,XOUT,CONT,LRC),                &
-                CONTR5(2,XOUT,CONT,LRC),                     &    
-                CONTR5(3,XOUT,CONT,LRC)/wavenumber_k,                     &
-                CONTR5(4,XOUT,CONT,LRC)/wavenumber_k, &                     
-                phi(XOUT,wavenumber_k,CONTR5(1,XOUT,CONT,LRC),&
-                CONTR5(2,XOUT,CONT,LRC),CONTR5(3,XOUT,CONT,LRC),CONTR5(4,XOUT,CONT,LRC)),&
-                psi(XOUT,wavenumber_k,CONTR5(1,XOUT,CONT,LRC),CONTR5(2,XOUT,CONT,LRC),&
-                CONTR5(3,XOUT,CONT,LRC),CONTR5(4,XOUT,CONT,LRC)),&
-                derivative_matter_perturbation(XOUT,CONTR5(1,XOUT,CONT,LRC),&
-                CONTR5(2,XOUT,CONT,LRC),CONTR5(3,XOUT,CONT,LRC),CONTR5(4,XOUT,CONT,LRC),&
-                CONTR5(5,XOUT,CONT,LRC),CONTR5(6,XOUT,CONT,LRC))
+           If (dimension_system_ode .eq. 6) then
 
-        Else if (MG_parametrisation .eq. 'Savvas') then
+              WRITE (UNIT_OUTPUT_FILE,98) XOUT,CONTR5(1,XOUT,CONT,LRC),CONTR5(2,XOUT,CONT,LRC),&    
+                   CONTR5(3,XOUT,CONT,LRC)/wavenumber_k,CONTR5(4,XOUT,CONT,LRC)/wavenumber_k,&                     
+                   CONTR5(5,XOUT,CONT,LRC),CONTR5(6,XOUT,CONT,LRC)
+
+           Else if (dimension_system_ode .eq. 4) then
+
+              WRITE (UNIT_OUTPUT_FILE,100) XOUT,CONTR5(1,XOUT,CONT,LRC),CONTR5(2,XOUT,CONT,LRC),&    
+                   CONTR5(3,XOUT,CONT,LRC)/wavenumber_k,CONTR5(4,XOUT,CONT,LRC)/wavenumber_k
+              
+           End if
+           
+        Else if ( ( ( (MG_parametrisation .eq. 'Savvas') .or. (MG_parametrisation .eq. 'GR_LAMBDA') ) .or. &
+         ( (MG_parametrisation .eq. 'HS_Basilakos') .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos')&
+         ) ) .and. (approach .eq. 'CHI') ) then
 
            WRITE (UNIT_OUTPUT_FILE,100) XOUT,CONTR5(1,XOUT,CONT,LRC),CONTR5(2,XOUT,CONT,LRC)/wavenumber_k,&    
                 CONTR5(3,XOUT,CONT,LRC),CONTR5(4,XOUT,CONT,LRC)
 
-        Else
+        Else if ( ( ( MG_parametrisation .eq. 'Savvas' ) .or. ( (MG_parametrisation .eq. 'HS_Basilakos') &
+          .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) ) .and. (approach .eq. 'EF')  ) then
 
            WRITE (UNIT_OUTPUT_FILE,99) XOUT,CONTR5(1,XOUT,CONT,LRC),CONTR5(2,XOUT,CONT,LRC),&    
                 CONTR5(3,XOUT,CONT,LRC),CONTR5(4,XOUT,CONT,LRC),CONTR5(5,XOUT,CONT,LRC),&
@@ -615,53 +200,25 @@ SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN)
 
         End if
 
-        If (MG_parametrisation .eq. 'Savvas') then
+        If (XOUT .lt. 1.d-4) then
 
-           If (XOUT .lt. log(1.d-4) ) then
+           XOUT = XOUT + 1.0d-6              
 
-              XOUT = XOUT + log(1.0d-6)              
+        Else if (XOUT .lt. 1.d-3) then
 
-           Else if (XOUT .lt. log(1.d-3) ) then
+           XOUT = XOUT + 1.d-5 
 
-              XOUT = XOUT + log(1.d-5) 
+        Else if (XOUT .lt. 1.d-2) then
 
-           Else if (XOUT .lt. log(1.d-2) ) then
+           XOUT = XOUT + 1.d-4 
 
-              XOUT = XOUT + log(1.d-4) 
+        Else if (XOUT .lt. 1.d-1) then
 
-           Else if (XOUT .lt. log(1.d-1) ) then
+           XOUT = XOUT + 1.d-3 
 
-              XOUT = XOUT + log(1.d-3) 
+        Else if (XOUT .le. 1.d0) then
 
-           Else if (XOUT .le. log(1.d0)) then
-
-              XOUT = XOUT + log(1.d-3) 
-
-           End if
-
-        Else
-
-           If (XOUT .lt. 1.d-4) then
-
-              XOUT = XOUT + 1.0d-6              
-
-           Else if (XOUT .lt. 1.d-3) then
-
-              XOUT = XOUT + 1.d-5 
-
-           Else if (XOUT .lt. 1.d-2) then
-
-              XOUT = XOUT + 1.d-4 
-
-           Else if (XOUT .lt. 1.d-1) then
-
-              XOUT = XOUT + 1.d-3 
-
-           Else if (XOUT .le. 1.d0) then
-
-              XOUT = XOUT + 1.d-3 
-
-           End if
+           XOUT = XOUT + 1.d-3 
 
         End if
 
@@ -671,13 +228,23 @@ SUBROUTINE SOLOUT (NR,XOLD,X,Y,CONT,LRC,N,RPAR,IPAR,IRTRN)
 
   END IF
 
+98 FORMAT(E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10)
+
 99 FORMAT(E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,ES20.10)
 
 100 FORMAT(E20.10,E20.10,E20.10,E20.10,E20.10)
  
   RETURN 
 
-END SUBROUTINE SOLOUT                                   
+END SUBROUTINE SOLOUT    
+
+!##########################
+! OUTPUTING SUBROUTINE ENDS
+!##########################
+                               
+!############################################################################
+! SUBROUTINE THAT COMPUTES RIGHT HAND SIDE THE THE SYSTEM OF EQUATIONS STARTS
+!############################################################################
 
 subroutine RHSPER(N,X,Y,F,RPAR,IPAR)
            
@@ -694,83 +261,146 @@ subroutine RHSPER(N,X,Y,F,RPAR,IPAR)
   ! \delta_m' = ...,  \delta_de' = ..., \theta_m' = ...., \theta_de' = ....
   !####################################################################################################
 
-  If (MG_parametrisation .eq. 'GR') then
+  If (MG_parametrisation .eq. 'GR_DE') then
 
-     F(1) = (X**(-3.d0 - 6.d0*w0_fld)*(9.d0*H0**3*wavenumber_k**4*X**(1.d0 + 3.d0*w0_fld)*(-2.d0*(-1.d0 + &
-          Omega_m)*e_pi + Omega_m*X**(3.d0*w0_fld))*(1.d0 + Omega_m*(-1.d0&
-          + X**(3.d0*w0_fld)))*Y(1) - 9.d0*H0**3*(-1.d0 + Omega_m)*wavenumber_k**2*(1.d0 + Omega_m*(-1.d0 + &
-          X**(3.d0*w0_fld)))*(wavenumber_k**2*(1.d0 + 2.d0*f_pi)*X**(1.d0 + 3.d0*w0_fld)&
-          + 2.d0*H0**2*g_pi*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(2) + Sqrt(X**(-1.d0 - &
-          3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*(wavenumber_k**2*X**(1.d0&
-          + 3.d0*w0_fld)*(9.d0*H0**2*Omega_m*wavenumber_k**2*X**(1.d0 + 6.d0*w0_fld) - 2.d0*wavenumber_k**4*X**(2.d0 + &
-          6.d0*w0_fld) + 27.d0*H0**4*(2.d0*e_pi - 2.d0*Omega_m*e_pi +&
-          Omega_m*X**(3.d0*w0_fld))*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(3) - 9.d0*H0**2*(1.d0 + &
-          w0_fld)*(-1.d0 + Omega_m)*(wavenumber_k**4*X**(2.d0 + 6.d0*w0_fld) +&
-          3.d0*H0**2*wavenumber_k**2*(1.d0 + 2.d0*f_pi)*X**(1.d0 + 3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))) + &
-          6.d0*H0**4*g_pi*(1.d0 + Omega_m*(-1.d0 +&
-          X**(3.d0*w0_fld)))**2)*Y(4))))/(2.d0*H0*wavenumber_k**6*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))
+     If (dimension_system_ode .eq. 4) then
 
-     F(2) = (X**(-4.d0 - 9.d0*w0_fld)*(3.d0*H0*wavenumber_k**2*X**(1.d0 + 3.d0*w0_fld)*(6.d0*H0**4*(1.d0 + w0_fld)*(-1.d0 + &
-          Omega_m)**2*g_pi + 2.d0*(w0_fld - &
-          cs2_fld)*wavenumber_k**4*X**(2.d0 + 6.d0*w0_fld) - 3.d0*H0**2*(1.d0 + w0_fld)*(-1.d0 + &
-          Omega_m)*X**(3.d0*w0_fld)*(2.d0*H0**2*Omega_m*g_pi + wavenumber_k**2*(1.d0 &
-          + 2.d0*f_pi)*X))*Sqrt(X**(-1.d0 - 3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(2) + &
-          (1.d0 + w0_fld)*(9.d0*H0**3*wavenumber_k**4*X**(2.d0 + & 
-          6.d0*w0_fld)*(-2.d0*(-1.d0 + Omega_m)*e_pi + Omega_m*X**(3.d0*w0_fld))*Sqrt(X**(-1.d0 - &
-          3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(1)&
-          + 9.d0*H0**2*wavenumber_k**2*X**(1.d0 + 3.d0*w0_fld)*(Omega_m*wavenumber_k**2*X**(1.d0 + 6.d0*w0_fld) + &
-          3.d0*H0**2*(-2.d0*(-1.d0 + Omega_m)*e_pi + Omega_m*X**(3.d0*w0_fld))*(1.d0&
-          + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(3) + (-2.d0*wavenumber_k**6*X**(3.d0 + 9.d0*w0_fld) + &
-          9.d0*H0**2*wavenumber_k**4*X**(2.d0 + 6.d0*w0_fld)*((1.d0 - Omega_m)*(1.d0 +&
-          3.d0*w0_fld - 2.d0*cs2_fld) + 2.d0*Omega_m*(w0_fld - cs2_fld)*X**(3.d0*w0_fld)) - &
-          27.d0*H0**4*(1.d0 + w0_fld)*(-1.d0 + Omega_m)*wavenumber_k**2*(1.d0 + & 
-          2.d0*f_pi)*X**(1.d0 + 3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))) - 54.d0*H0**6*(1.d0 + &
-          w0_fld)*(-1.d0 + Omega_m)*g_pi*(1.d0 + &
-          Omega_m*(-1.d0 + X**(3.d0*w0_fld)))**2)*Y(4))))/(2.d0*H0*wavenumber_k**6*Sqrt(X**(-1.d0 - &
-          3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld)))))
+        F(1) = (X**(-3.d0 - 6.d0*w0_fld)*(9.d0*H0**3*wavenumber_k**4*X**(1.d0 + 3.d0*w0_fld)*(-2.d0*(-1.d0 + &
+             Omega_m)*e_pi + Omega_m*X**(3.d0*w0_fld))*(1.d0 + Omega_m*(-1.d0&
+             + X**(3.d0*w0_fld)))*Y(1) - 9.d0*H0**3*(-1.d0 + Omega_m)*wavenumber_k**2*(1.d0 + Omega_m*(-1.d0 + &
+             X**(3.d0*w0_fld)))*(wavenumber_k**2*(1.d0 + 2.d0*f_pi)*X**(1.d0 + 3.d0*w0_fld)&
+             + 2.d0*H0**2*g_pi*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(2) + Sqrt(X**(-1.d0 - &
+             3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*(wavenumber_k**2*X**(1.d0&
+             + 3.d0*w0_fld)*(9.d0*H0**2*Omega_m*wavenumber_k**2*X**(1.d0 + 6.d0*w0_fld) - 2.d0*wavenumber_k**4*X**(2.d0 + &
+             6.d0*w0_fld) + 27.d0*H0**4*(2.d0*e_pi - 2.d0*Omega_m*e_pi +&
+             Omega_m*X**(3.d0*w0_fld))*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(3) - 9.d0*H0**2*(1.d0 + &
+             w0_fld)*(-1.d0 + Omega_m)*(wavenumber_k**4*X**(2.d0 + 6.d0*w0_fld) +&
+             3.d0*H0**2*wavenumber_k**2*(1.d0 + 2.d0*f_pi)*X**(1.d0 + 3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))) + &
+             6.d0*H0**4*g_pi*(1.d0 + Omega_m*(-1.d0 +&
+             X**(3.d0*w0_fld)))**2)*Y(4))))/(2.d0*H0*wavenumber_k**6*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))
 
+        F(2) = (X**(-4.d0 - 9.d0*w0_fld)*(3.d0*H0*wavenumber_k**2*X**(1.d0 + 3.d0*w0_fld)*(6.d0*H0**4*(1.d0 + w0_fld)*(-1.d0 + &
+             Omega_m)**2*g_pi + 2.d0*(w0_fld - &
+             cs2_fld)*wavenumber_k**4*X**(2.d0 + 6.d0*w0_fld) - 3.d0*H0**2*(1.d0 + w0_fld)*(-1.d0 + &
+             Omega_m)*X**(3.d0*w0_fld)*(2.d0*H0**2*Omega_m*g_pi + wavenumber_k**2*(1.d0 &
+             + 2.d0*f_pi)*X))*Sqrt(X**(-1.d0 - 3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(2) + &
+             (1.d0 + w0_fld)*(9.d0*H0**3*wavenumber_k**4*X**(2.d0 + & 
+             6.d0*w0_fld)*(-2.d0*(-1.d0 + Omega_m)*e_pi + Omega_m*X**(3.d0*w0_fld))*Sqrt(X**(-1.d0 - &
+             3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(1)&
+             + 9.d0*H0**2*wavenumber_k**2*X**(1.d0 + 3.d0*w0_fld)*(Omega_m*wavenumber_k**2*X**(1.d0 + 6.d0*w0_fld) + &
+             3.d0*H0**2*(-2.d0*(-1.d0 + Omega_m)*e_pi + Omega_m*X**(3.d0*w0_fld))*(1.d0&
+             + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(3) + (-2.d0*wavenumber_k**6*X**(3.d0 + 9.d0*w0_fld) + &
+             9.d0*H0**2*wavenumber_k**4*X**(2.d0 + 6.d0*w0_fld)*((1.d0 - Omega_m)*(1.d0 +&
+             3.d0*w0_fld - 2.d0*cs2_fld) + 2.d0*Omega_m*(w0_fld - cs2_fld)*X**(3.d0*w0_fld)) - &
+             27.d0*H0**4*(1.d0 + w0_fld)*(-1.d0 + Omega_m)*wavenumber_k**2*(1.d0 + & 
+             2.d0*f_pi)*X**(1.d0 + 3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))) - 54.d0*H0**6*(1.d0 + &
+             w0_fld)*(-1.d0 + Omega_m)*g_pi*(1.d0 + &
+             Omega_m*(-1.d0 + X**(3.d0*w0_fld)))**2)*Y(4))))/(2.d0*H0*wavenumber_k**6*Sqrt(X**(-1.d0 - &
+             3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld)))))
 
-     F(3) = (X**(-3.d0 - 6.d0*w0_fld)*(-3.d0*H0*wavenumber_k**4*X**(1.d0 + 3.d0*w0_fld)*(2.d0*e_pi - &
-          2.d0*Omega_m*e_pi + Omega_m*X**(3.d0*w0_fld))*Y(1) + &
-          3.d0*H0*(-1.d0 + Omega_m)*wavenumber_k**2*(wavenumber_k**2*(1.d0 + 2.d0*f_pi)*X**(1.d0 + 3.d0*w0_fld) + &
-          2.d0*H0**2*g_pi*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(2) - &
-          Sqrt(X**(-1.d0 - 3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*(wavenumber_k**2*X**(1.d0 + &
-          6.d0*w0_fld)*(9.d0*H0**2*Omega_m + 2.d0*wavenumber_k**2*X)*Y(3) + &
-          18.d0*H0**4*(1.d0 + w0_fld)*(-1.d0 + Omega_m)**2*g_pi*Y(4) - 9.d0*H0**2*(-1.d0 + &
-          Omega_m)*X**(3.d0*w0_fld)*(2.d0*wavenumber_k**2*e_pi*X*Y(3) + &
-          (1.d0 + w0_fld)*(2.d0*H0**2*Omega_m*g_pi + wavenumber_k**2*(1.d0 + &
-          2.d0*f_pi)*X)*Y(4)))))/(2.d0*wavenumber_k**4*Sqrt((Omega_m - (-1.d0 + Omega_m)/X**(3.d0*w0_fld))/X))
+        F(3) = (X**(-3.d0 - 6.d0*w0_fld)*(-3.d0*H0*wavenumber_k**4*X**(1.d0 + 3.d0*w0_fld)*(2.d0*e_pi - &
+             2.d0*Omega_m*e_pi + Omega_m*X**(3.d0*w0_fld))*Y(1) + &
+             3.d0*H0*(-1.d0 + Omega_m)*wavenumber_k**2*(wavenumber_k**2*(1.d0 + 2.d0*f_pi)*X**(1.d0 + 3.d0*w0_fld) + &
+             2.d0*H0**2*g_pi*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(2) - &
+             Sqrt(X**(-1.d0 - 3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*(wavenumber_k**2*X**(1.d0 + &
+             6.d0*w0_fld)*(9.d0*H0**2*Omega_m + 2.d0*wavenumber_k**2*X)*Y(3) + &
+             18.d0*H0**4*(1.d0 + w0_fld)*(-1.d0 + Omega_m)**2*g_pi*Y(4) - 9.d0*H0**2*(-1.d0 + &
+             Omega_m)*X**(3.d0*w0_fld)*(2.d0*wavenumber_k**2*e_pi*X*Y(3) + &
+             (1.d0 + w0_fld)*(2.d0*H0**2*Omega_m*g_pi + wavenumber_k**2*(1.d0 + &
+             2.d0*f_pi)*X)*Y(4)))))/(2.d0*wavenumber_k**4*Sqrt((Omega_m - (-1.d0 + Omega_m)/X**(3.d0*w0_fld))/X))
 
-     F(4) = -(X**(-3.d0 - 6.d0*w0_fld)*(wavenumber_k**4*X**(1.d0 + 3.d0*w0_fld)*(4.d0*wavenumber_k**2*e_pi*X**(1.d0 + &
-          3.d0*w0_fld) + 9.d0*H0**2*(1.d0 + w0_fld)*(2.d0*e_pi&
-          - 2.d0*Omega_m*e_pi + Omega_m*X**(3.d0*w0_fld)))*Y(1) + wavenumber_k**2*(-2.d0*wavenumber_k**4*(3.d0*cs2_fld - &
-          2.d0*f_pi)*X**(2.d0 + 6.d0*w0_fld) + H0**2*wavenumber_k**2*X**(1.d0&
-          + 3.d0*w0_fld)*((1.d0 - Omega_m)*(9.d0*(1.d0 + w0_fld)*(1.d0 + 2.d0*f_pi) + 4.d0*g_pi) + &
-          4.d0*Omega_m*g_pi*X**(3.d0*w0_fld)) - 18.d0*H0**4*(1.d0 + w0_fld)*(-1.d0&
-          + Omega_m)*g_pi*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(2) + 3.d0*H0*Sqrt(X**(-1.d0 - &
-          3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*(18.d0*H0**4*(1.d0&
-          + w0_fld)**2*(-1.d0 + Omega_m)**2*g_pi*Y(4) + wavenumber_k**2*X**(1.d0 + 6.d0*w0_fld)*((9.d0*H0**2*(1.d0 + &
-          w0_fld)*Omega_m + 4.d0*wavenumber_k**2*e_pi*X)*Y(3) + &
-          2.d0*(1.d0 + w0_fld)*(2.d0*H0**2*Omega_m*g_pi + wavenumber_k**2*(1.d0 - 3.d0*cs2_fld + 2.d0*f_pi)*X)*Y(4)) - &
-          H0**2*(1.d0 + w0_fld)*(-1.d0 + &
-          Omega_m)*X**(3.d0*w0_fld)*(18.d0*wavenumber_k**2*e_pi*X*Y(3) + (18.d0*H0**2*(1.d0 + w0_fld)*Omega_m*g_pi + &
-          wavenumber_k**2*(9.d0*(1.d0 + w0_fld)*(1.d0 + 2.d0*f_pi) +&
-          4.d0*g_pi)*X)*Y(4)))))/(6.d0*H0*(1.d0 + w0_fld)*wavenumber_k**4*Sqrt((Omega_m - (-1.d0 + Omega_m)/X**(3.d0*w0_fld))/X))
+        F(4) = -(X**(-3.d0 - 6.d0*w0_fld)*(wavenumber_k**4*X**(1.d0 + 3.d0*w0_fld)*(4.d0*wavenumber_k**2*e_pi*X**(1.d0 + &
+             3.d0*w0_fld) + 9.d0*H0**2*(1.d0 + w0_fld)*(2.d0*e_pi&
+             - 2.d0*Omega_m*e_pi + Omega_m*X**(3.d0*w0_fld)))*Y(1) + wavenumber_k**2*(-2.d0*wavenumber_k**4*(3.d0*cs2_fld - &
+             2.d0*f_pi)*X**(2.d0 + 6.d0*w0_fld) + H0**2*wavenumber_k**2*X**(1.d0&
+             + 3.d0*w0_fld)*((1.d0 - Omega_m)*(9.d0*(1.d0 + w0_fld)*(1.d0 + 2.d0*f_pi) + 4.d0*g_pi) + &
+             4.d0*Omega_m*g_pi*X**(3.d0*w0_fld)) - 18.d0*H0**4*(1.d0 + w0_fld)*(-1.d0&
+             + Omega_m)*g_pi*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*Y(2) + 3.d0*H0*Sqrt(X**(-1.d0 - &
+             3.d0*w0_fld)*(1.d0 + Omega_m*(-1.d0 + X**(3.d0*w0_fld))))*(18.d0*H0**4*(1.d0&
+             + w0_fld)**2*(-1.d0 + Omega_m)**2*g_pi*Y(4) + wavenumber_k**2*X**(1.d0 + 6.d0*w0_fld)*((9.d0*H0**2*(1.d0 + &
+             w0_fld)*Omega_m + 4.d0*wavenumber_k**2*e_pi*X)*Y(3) + &
+             2.d0*(1.d0 + w0_fld)*(2.d0*H0**2*Omega_m*g_pi + wavenumber_k**2*(1.d0 - 3.d0*cs2_fld + 2.d0*f_pi)*X)*Y(4)) - &
+             H0**2*(1.d0 + w0_fld)*(-1.d0 + &
+             Omega_m)*X**(3.d0*w0_fld)*(18.d0*wavenumber_k**2*e_pi*X*Y(3) + (18.d0*H0**2*(1.d0 + w0_fld)*Omega_m*g_pi + &
+             wavenumber_k**2*(9.d0*(1.d0 + w0_fld)*(1.d0 + 2.d0*f_pi) +&
+             4.d0*g_pi)*X)*Y(4)))))/(6.d0*H0*(1.d0 + w0_fld)*wavenumber_k**4*Sqrt((Omega_m - (-1.d0 + Omega_m)/X**(3.d0*w0_fld))/X))
 
-     Else if (MG_parametrisation .eq. 'HS_Basilakos') then
+     Else if (dimension_system_ode .eq. 6) then
 
-        F(1) = -(3*H0**2*Omega_m*Y(1) + 3*H0**2*X**3*Omega_DE(X)*Y(2) + 2*X*(wavenumber_k**2*Y(5) + &
-             conformal_Hubble_parameter(X)*(Y(3) + 3*conformal_Hubble_parameter(X)*Y(6))))/&
-             (2.*X**2*conformal_Hubble_parameter(X)**2)
+        F(1) = -(3.d0*H0**2*X**2*(Omega_Matter(X)*Y(1) + Omega_DE(X)*Y(2)) + 2.d0*(wavenumber_k**2*Y(5) + &
+             conformal_Hubble_parameter(X)*(Y(3) + 3.d0*conformal_Hubble_parameter(X)*Y(6))))/&
+             (2.d0*X*conformal_Hubble_parameter(X)**2)
+
+        F(2) = (-2.d0*wavenumber_k**2*conformal_Hubble_parameter(X)*(1.d0 + equation_of_state(X))*Y(4) - &
+             18.d0*conformal_Hubble_parameter(X)**3*(1.d0 + equation_of_state(X))*(-equation_of_state(X) + &
+             sound_speed_squared(X))*Y(4) + wavenumber_k**2*(1.d0 + equation_of_state(X))*&
+             (-3.d0*H0**2*X**2*(Omega_Matter(X)*Y(1) + Omega_DE(X)*Y(2)) - 2.d0*wavenumber_k**2*Y(5)) -& 
+             6.d0*wavenumber_k**2*conformal_Hubble_parameter(X)**2*((-equation_of_state(X) + &
+             sound_speed_squared(X))*Y(2) + (1.d0 + equation_of_state(X))*Y(6)))/&
+             (2.d0*wavenumber_k**2*X*conformal_Hubble_parameter(X)**2)
+
+        F(3) = -Y(3)/X + wavenumber_k**2*Y(6)/X/conformal_Hubble_parameter(X)
+
+        F(4) = -((-((wavenumber_k**2*sound_speed_squared(X)*Y(2))/(1.d0 + equation_of_state(X))) +& 
+             conformal_Hubble_parameter(X)*(1.d0 - 3.d0*equation_of_state(X))*Y(4) + & 
+             3.d0*conformal_Hubble_parameter(X)*(equation_of_state(X) - sound_speed_squared(X))*Y(4) - &
+             wavenumber_k**2*((-2.d0*(e_pi*(Y(1) + (3.d0*conformal_Hubble_parameter(X)*Y(3))/wavenumber_k**2) + &
+             (f_pi*(wavenumber_k**2*Y(2) + 3.d0*conformal_Hubble_parameter(X)*(1.d0 + equation_of_state(X))*Y(4)&
+             ))/(wavenumber_k**2 + g_pi**2*conformal_Hubble_parameter(X)**2)))&
+             /(3.d0*(1.d0 + equation_of_state(X))) + Y(6)))/(X*conformal_Hubble_parameter(X)))
+
+        F(5) = -(3.d0*H0**2*X**2*(Omega_Matter(X)*Y(1) + Omega_DE(X)*Y(2)) + 2.d0*wavenumber_k**2*Y(5) + &
+             6.d0*conformal_Hubble_parameter(X)**2*Y(6))/(6.d0*X*conformal_Hubble_parameter(X)**2)
+
+        F(6) = (27.d0*H0**4*wavenumber_k**2*X**4*(wavenumber_k**2 + g_pi**2*conformal_Hubble_parameter(X)**2)*&
+             (e_pi*g_pi**2*conformal_Hubble_parameter(X)**2 + wavenumber_k**2*(e_pi + f_pi + &
+             f_pi*equation_of_state(X)))*Omega_DE(X)**2*Y(2) + 3.d0*H0**2*X**2*Omega_DE(X)*&
+             (-(wavenumber_k**4*(wavenumber_k**4 + conformal_Hubble_parameter(X)**2*&
+             (2.d0*wavenumber_k**2*(-6.d0*f_pi**2 + g_pi**2 + 9.d0*f_pi*equation_of_state(X)) + &
+             g_pi**2*conformal_Hubble_parameter(X)*(-12.d0*f_pi*X*derivative_conformal_Hubble_parameter(X) + &
+             conformal_Hubble_parameter(X)*(g_pi**2 + 18.d0*f_pi*equation_of_state(X)))))*Y(2)) + &
+             3.d0*(6.d0*e_pi*g_pi**4*conformal_Hubble_parameter(X)**7*Y(3) - &
+             6.d0*e_pi*g_pi**4*X*conformal_Hubble_parameter(X)**6*derivative_conformal_Hubble_parameter(X)*Y(3) + &
+             2.d0*wavenumber_k**6*conformal_Hubble_parameter(X)*(e_pi*Y(3) + f_pi*(1.d0 + equation_of_state(X))*Y(4)) + &
+             2.d0*wavenumber_k**4*conformal_Hubble_parameter(X)**3*(e_pi*(3.d0 + 6.d0*f_pi + 2.d0*g_pi**2)*Y(3) +& 
+             f_pi*(3.d0 + 6.d0*f_pi + g_pi**2 - 9.d0*equation_of_state(X))*(1.d0 + equation_of_state(X))*Y(4)) + &
+             2.d0*g_pi**2*wavenumber_k**2*conformal_Hubble_parameter(X)**5*(e_pi*(6.d0 + 6.d0*f_pi + g_pi**2)*Y(3) -& 
+             3.d0*f_pi*(1.d0 + equation_of_state(X))*(-1.d0 + 3.d0*equation_of_state(X))*Y(4)) + &
+             wavenumber_k**6*(e_pi + f_pi + f_pi*equation_of_state(X))*(3.d0*H0**2*X**2*Omega_Matter(X)*Y(1) + &
+             2.d0*wavenumber_k**2*Y(5)) + g_pi**2*wavenumber_k**2*conformal_Hubble_parameter(X)**4*&
+             (e_pi*(4.d0*f_pi*wavenumber_k**2 + 3.d0*g_pi**2*H0**2*X**2*Omega_Matter(X))*Y(1) +& 
+             6.d0*X*derivative_conformal_Hubble_parameter(X)*(-2.d0*e_pi*Y(3) + f_pi*(1.d0 + &
+             equation_of_state(X))*Y(4)) + 2.d0*e_pi*g_pi**2*wavenumber_k**2*Y(5)) + &
+             wavenumber_k**4*conformal_Hubble_parameter(X)**2*((4.d0*e_pi*f_pi*wavenumber_k**2 + &
+             3.d0*g_pi**2*H0**2*X**2*(2.d0*e_pi + f_pi + f_pi*equation_of_state(X))*Omega_Matter(X))*Y(1) - &
+             6.d0*X*derivative_conformal_Hubble_parameter(X)*(e_pi*Y(3) + f_pi*(1.d0 + equation_of_state(X))*Y(4)) + &
+             2.d0*g_pi**2*wavenumber_k**2*(2.d0*e_pi + f_pi + f_pi*equation_of_state(X))*Y(5)))) - &
+             (wavenumber_k**2 + g_pi**2*conformal_Hubble_parameter(X)**2)*&
+             (18.d0*H0**2*X**3*conformal_Hubble_parameter(X)**2*derivative_Omega_DE(X)*(f_pi*wavenumber_k**4*Y(2) + &
+             3.d0*e_pi*conformal_Hubble_parameter(X)*(wavenumber_k**2 + g_pi**2*conformal_Hubble_parameter(X)**2)*Y(3) + &
+             wavenumber_k**2*(e_pi*(wavenumber_k**2 + g_pi**2*conformal_Hubble_parameter(X)**2)*Y(1) + &
+             3.d0*f_pi*conformal_Hubble_parameter(X)*(1.d0 + equation_of_state(X))*Y(4))) + &
+             wavenumber_k**4*(wavenumber_k**2 + g_pi**2*conformal_Hubble_parameter(X)**2)*&
+             (3.d0*H0**2*X**2*Omega_Matter(X)*Y(1) + 2.d0*(wavenumber_k**2 + 6.d0*conformal_Hubble_parameter(X)**2)*Y(5) - &
+             6.d0*conformal_Hubble_parameter(X)**2*Y(6))))/(6.d0*wavenumber_k**4*X*conformal_Hubble_parameter(X)**2*&
+             (wavenumber_k**2 + g_pi**2*conformal_Hubble_parameter(X)**2)**2)
+
+     End if
+
+!!$  Else if (MG_parametrisation .eq. 'HS_Basilakos') then
+!!$
+!!$     F(1) = -(3*H0**2*Omega_m*Y(1) + 3*H0**2*X**3*Omega_DE(X)*Y(2) + 2*X*(wavenumber_k**2*Y(5) + &
+!!$          conformal_Hubble_parameter(X)*(Y(3) + 3*conformal_Hubble_parameter(X)*Y(6))))/&
+!!$          (2.*X**2*conformal_Hubble_parameter(X)**2)
 
 !!$-(3*H0**2*Omega_m*Y(1) + (-3*H0**2*Omega_m + 3*X*conformal_Hubble_parameter(X)**2)*Y(2) + &
 !!$          2*X*(wavenumber_k**2*Y(5) + conformal_Hubble_parameter(X)*(Y(3) + 3*conformal_Hubble_parameter(X)*&
 !!$          Y(6))))/(2.*X**2*conformal_Hubble_parameter(X)**2)
 
-        F(2) = -(2*X**3*conformal_Hubble_parameter(X)*Omega_DE(X)*Y(4) + X**2*(1 + &
-             equation_of_state(X))*Omega_DE(X)*(3*H0**2*(Omega_m*Y(1) + X**3*Omega_DE(X)*Y(2)) + &
-             2*wavenumber_k**2*X*Y(5)) + 6*conformal_Hubble_parameter(X)**2*(Omega_m*dark_energy_pressure_perturbation(X)*Y(1) + &
-             X**3*Omega_DE(X)*(Y(6) + equation_of_state(X)*(-Y(2) + Y(6)))))/(2.*X**4*conformal_Hubble_parameter(X)**2*Omega_DE(X))
+!!$     F(2) = -(2*X**3*conformal_Hubble_parameter(X)*Omega_DE(X)*Y(4) + X**2*(1 + &
+!!$          equation_of_state(X))*Omega_DE(X)*(3*H0**2*(Omega_m*Y(1) + X**3*Omega_DE(X)*Y(2)) + &
+!!$          2*wavenumber_k**2*X*Y(5)) + 6*conformal_Hubble_parameter(X)**2*(Omega_m*dark_energy_pressure_perturbation(X)*Y(1) + &
+!!$          X**3*Omega_DE(X)*(Y(6) + equation_of_state(X)*(-Y(2) + Y(6)))))/(2.*X**4*conformal_Hubble_parameter(X)**2*Omega_DE(X))
 
 !!$(2*H0**2*Omega_m*X*conformal_Hubble_parameter(X)*Y(4) - 2*X**2*conformal_Hubble_parameter(X)**3*Y(4) + &
 !!$         H0**2*Omega_m*(1 + equation_of_state(X))*(3*H0**2*Omega_m*(Y(1) - Y(2)) + 2*wavenumber_k**2*X*Y(5)) + &
@@ -779,27 +409,27 @@ subroutine RHSPER(N,X,Y,F,RPAR,IPAR)
 !!$         equation_of_state(X))*Y(1) + 6*H0**2*Omega_m*Y(2) - 2*(1 + equation_of_state(X))*(wavenumber_k**2*X*Y(5) - &
 !!$         3*H0**2*Omega_m*Y(6))))/(2.*X**2*conformal_Hubble_parameter(X)**2*(-(H0**2*Omega_m) + X*conformal_Hubble_parameter(X)**2)) 
 
-        F(3) = -Y(3)/X + wavenumber_k**2*Y(6)/X/conformal_Hubble_parameter(X)
-
-        F(4) = (Omega_m*wavenumber_k**2*(-2*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0) + &
-             3*dark_energy_pressure_perturbation(X))*Y(1) + &
-             3*X**3*Omega_DE(X)*(conformal_Hubble_parameter(X)*(-1 + 3*equation_of_state(X))*Y(4) + wavenumber_k**2*(1 + &
-             equation_of_state(X))*Y(6)))/(3.*X**4*conformal_Hubble_parameter(X)*Omega_DE(X))
+!!$     F(3) = -Y(3)/X + wavenumber_k**2*Y(6)/X/conformal_Hubble_parameter(X)
+!!$
+!!$     F(4) = (Omega_m*wavenumber_k**2*(-2*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0) + &
+!!$          3*dark_energy_pressure_perturbation(X))*Y(1) + &
+!!$          3*X**3*Omega_DE(X)*(conformal_Hubble_parameter(X)*(-1 + 3*equation_of_state(X))*Y(4) + wavenumber_k**2*(1 + &
+!!$          equation_of_state(X))*Y(6)))/(3.*X**4*conformal_Hubble_parameter(X)*Omega_DE(X))
 
 !!$-((conformal_Hubble_parameter(X)*(1 - 3*equation_of_state(X))*Y(4) + (wavenumber_k**2*&
 !!$             ((H0**2*Omega_m*(-2*anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0) + 3*dark_energy_pressure_perturbation(X))*Y(1))/&
 !!$             (H0**2*Omega_m - X*conformal_Hubble_parameter(X)**2) - 3*(1 + equation_of_state(X))*Y(6)))/3.)/&
 !!$             (X*conformal_Hubble_parameter(X)))
 
-        F(5) = -(3*H0**2*Omega_m*Y(1) + 3*H0**2*X**3*Omega_DE(X)*Y(2) + 2*wavenumber_k**2*X*Y(5) + &
-             6*X*conformal_Hubble_parameter(X)**2*Y(6))/(6.*X**2*conformal_Hubble_parameter(X)**2)
+!!$     F(5) = -(3*H0**2*Omega_m*Y(1) + 3*H0**2*X**3*Omega_DE(X)*Y(2) + 2*wavenumber_k**2*X*Y(5) + &
+!!$          6*X*conformal_Hubble_parameter(X)**2*Y(6))/(6.*X**2*conformal_Hubble_parameter(X)**2)
 
 !!$-(3*H0**2*Omega_m*Y(1) + (-3*H0**2*Omega_m + 3*X*conformal_Hubble_parameter(X)**2)*Y(2) + &
 !!$             2*wavenumber_k**2*X*Y(5) + 6*X*conformal_Hubble_parameter(X)**2*Y(6))/(6.*X**2*conformal_Hubble_parameter(X)**2)
 
-        F(6) = -((3*H0**2*(Omega_m*Y(1) + X**3*Omega_DE(X)*Y(2)) + 2*wavenumber_k**2*X*Y(5))/conformal_Hubble_parameter(X)**2 + &
-             (6*X*(3*H0**2*X**3*(anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0)*derivative_Omega_DE(X) + &
-             derivative_anisotropic_stress(X)*Omega_DE(X)) + wavenumber_k**2*(2*Y(5) - Y(6))))/wavenumber_k**2)/(6.*X**2)
+!!$     F(6) = -((3*H0**2*(Omega_m*Y(1) + X**3*Omega_DE(X)*Y(2)) + 2*wavenumber_k**2*X*Y(5))/conformal_Hubble_parameter(X)**2 + &
+!!$          (6*X*(3*H0**2*X**3*(anisotropic_stress(X,0.d0,0.d0,0.d0,0.d0)*derivative_Omega_DE(X) + &
+!!$          derivative_anisotropic_stress(X)*Omega_DE(X)) + wavenumber_k**2*(2*Y(5) - Y(6))))/wavenumber_k**2)/(6.*X**2)
 
 !!$(-3*H0**2*Omega_m*wavenumber_k**2*Y(1) + 3*wavenumber_k**2*(H0**2*Omega_m - &
 !!$             X*conformal_Hubble_parameter(X)**2)*Y(2) - 2*(9*X*conformal_Hubble_parameter(X)**4*(-2*anisotropic_stress(X,&
@@ -809,43 +439,61 @@ subroutine RHSPER(N,X,Y,F,RPAR,IPAR)
 !!$             X*derivative_anisotropic_stress(X)) + wavenumber_k**2*X*(2*Y(5) - Y(6)))))/(6.*wavenumber_k**2*X**2*&
 !!$             conformal_Hubble_parameter(X)**2)
 
-     Else if (MG_parametrisation .eq. 'Starobinsky_Basilakos') then
+!!$  Else if (MG_parametrisation .eq. 'Starobinsky_Basilakos') then
+!!$
+!!$     write(UNIT_EXE_FILE,*) 'STAROBINSKY PARAMETRISATION IS NOT IMPLEMENTED YET'
+!!$
+!!$     stop
 
-        write(UNIT_EXE_FILE,*) 'STAROBINSKY PARAMETRISATION IS NOT IMPLEMENTED YET'
+  Else if  ( (MG_parametrisation .eq. 'GR_LAMBDA') .and. (approach .eq. 'CHI') ) then 
 
-        stop
+     F(1) = -(3.d0*H0**2*X**2*Omega_Matter(X)*Y(1) + 2.d0*conformal_Hubble_parameter(X)*Y(2) + &
+          2.d0*(wavenumber_k**2 + 3.d0*conformal_Hubble_parameter(X)**2)*Y(3))/&
+       (2.d0*X*conformal_Hubble_parameter(X)**2)
 
-     Else if (MG_parametrisation .eq. 'Savvas') then
+     F(2) = -Y(2)/X  + wavenumber_k**2*Y(3)/X/conformal_Hubble_parameter(X)
 
-        F(1) = -Y(2)/conformal_Hubble_parameter(X)/X - 3.d0*H0**2*Omega_m/X**3/conformal_Hubble_parameter(X)**2/F_MG_prime(X)*(&
-             Y(1) + 3.d0*conformal_Hubble_parameter(X)*Y(2)/wavenumber_k**2 ) - ( 3.d0/X + &
-             2.d0*wavenumber_k**2*F_MG(X)/conformal_Hubble_parameter(X)**2/F_MG_prime(X)/X**2 )*Y(3) + &
-             ( 3.d0/2.d0/F_MG(X)/X + 9.d0*Omega_m/(Omega_m + (1.d0 - Omega_m )*X**3  )/F_MG_prime(X)/X**2/2.d0 )*Y(4)
+     F(3) = -(3.d0*H0**2*X**2*Omega_Matter(X)*Y(1) + 2.d0*(wavenumber_k**2 + &
+          3*conformal_Hubble_parameter(X)**2)*Y(3))/(6.d0*X*conformal_Hubble_parameter(X)**2)
 
-        F(2) = wavenumber_k**2*Y(3)/conformal_Hubble_parameter(X)/X - Y(2) - &
-             wavenumber_k**2*Y(4)/conformal_Hubble_parameter(X)/2.d0/F_MG(X)/X
+     F(4) = 0.d0
 
-        F(3) = 3.d0*H0**2*Omega_m*Y(2)/X**2/conformal_Hubble_parameter(X)/F_MG(X)/wavenumber_k**2 - &
-             ( 1.d0/X + F_MG_prime(X)/2.d0/F_MG(X) )*Y(3) + 3.d0*F_MG_prime(X)*Y(4)/4.d0/F_MG(X)**2
+  Else if ( ( ( MG_parametrisation .eq. 'Savvas' ) .or. (  (MG_parametrisation .eq. 'HS_Basilakos') .or. &
+       (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) ) .and. (approach .eq. 'CHI')  ) then
 
-        F(4) = -2.d0*H0**2*Omega_m*F_MG(X)/X**3/conformal_Hubble_parameter(X)**2/F_MG_prime(X)*( &
-             Y(1) + 3.d0*conformal_Hubble_parameter(X)*Y(2)/wavenumber_k**2 ) - &
-             3.d0*H0**2*Omega_m*Y(2)/X**2/wavenumber_k**2/conformal_Hubble_parameter(X) + &
-             ( 1.d0/X - F_MG_prime(X)/2.d0/F_MG(X) + 3.d0*F_MG(X)*Omega_m/F_MG_prime(X)/X**2/(Omega_m + &
-             (1.d0 - Omega_m)*X**3 ) )*Y(4) + ( F_MG_prime(X) - &
-             4.d0*F_MG(X)**2*wavenumber_k**2/3.d0/F_MG_prime(X)/X**2/conformal_Hubble_parameter(X)**2 )*Y(3)
+     F(1) = -Y(2)/conformal_Hubble_parameter(X)/X - 3.d0*H0**2*Omega_Matter(X)*&
+          Delta_matter(X,wavenumber_k,Y(1),Y(3))/conformal_Hubble_parameter(X)**2/fMG_R_prime(X) - ( 3.d0/X + &
+          2.d0*wavenumber_k**2*F_MG(X)/conformal_Hubble_parameter(X)**2/fMG_R_prime(X)/X**2 )*Y(3) + &
+          ( 3.d0/2.d0/F_MG(X)/X - 3.d0*(X*derivative_conformal_Hubble_parameter(X) - &
+          conformal_Hubble_parameter(X))/conformal_Hubble_parameter(X)/X**2/fMG_R_prime(X))*Y(4)
 
-!        write(UNIT_EXE_FILE,*) X, F(:)
+     F(2) = wavenumber_k**2*Y(3)/conformal_Hubble_parameter(X)/X - Y(2)/X - &
+          wavenumber_k**2*Y(4)/conformal_Hubble_parameter(X)/2.d0/F_MG(X)/X
 
-     Else
+     F(3) = 3.d0*H0**2*Omega_Matter(X)*X*Y(2)/conformal_Hubble_parameter(X)/F_MG(X)/wavenumber_k**2 - &
+          ( 1.d0/X + fMG_R_prime(X)/2.d0/F_MG(X) )*Y(3) + 3.d0*fMG_R_prime(X)*Y(4)/4.d0/F_MG(X)**2
 
-        write(UNIT_EXE_FILE,*) 'UNKNOWN MG PARAMETRISATION'
+     F(4) = -2.d0*H0**2*Omega_Matter(X)*F_MG(X)/conformal_Hubble_parameter(X)**2/fMG_R_prime(X)*&
+          Delta_matter(X,wavenumber_k,Y(1),Y(3)) - &
+          3.d0*H0**2*Omega_Matter(X)*X*Y(2)/wavenumber_k**2/conformal_Hubble_parameter(X) + &
+          ( 1.d0/X - fMG_R_prime(X)/2.d0/F_MG(X) - 2.d0*F_MG(X)/fMG_R_prime(X)/X*(X*&
+          derivative_conformal_Hubble_parameter(X) - conformal_Hubble_parameter(X))/&
+          conformal_Hubble_parameter(X) )*Y(4) + ( fMG_R_prime(X) - &
+          4.d0*F_MG(X)**2*wavenumber_k**2/3.d0/fMG_R_prime(X)/X**2/conformal_Hubble_parameter(X)**2 )*Y(3)
 
-        stop
+  Else
 
-     End if
+     write(UNIT_EXE_FILE,*) 'UNKNOWN MG PARAMETRISATION'
+
+     stop
+
+  End if
 
 end subroutine RHSPER                                          
+
+!##########################################################################
+! SUBROUTINE THAT COMPUTES RIGHT HAND SIDE THE THE SYSTEM OF EQUATIONS ENDS
+!##########################################################################
 
 subroutine JRHSPER(N,X,Y,DFY,LDFY,RPAR,IPAR)
 

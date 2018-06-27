@@ -30,7 +30,7 @@ import matplotlib.pyplot as py
 
 # Model 4
 
-am4,dmm4,dem4,vmm4,vdem4,phim4,psim4 = np.loadtxt('./output/numerical_solution.txt',unpack=True,usecols=[0,1,2,3,4,5,6])
+am4,dmm4,dem4,vmm4,vdem4 = np.loadtxt('./output/numerical_solution.txt',unpack=True,usecols=[0,1,2,3,4])
 
 xm4,dea1m4,vdea1m4,dea2m4,vdea2m4 = np.loadtxt('./output/analytical_solution.txt',unpack=True,usecols=[0,1,2,3,4])
 
@@ -170,8 +170,8 @@ py.xlabel(r'$a$',fontsize='large')
 #######################################################################################
 # Placing the legend 
 #######################################################################################
-labels = (r'$\delta_{de}$',r'$V_{de}$')
-py.legend(labels,bbox_to_anchor=(-1.2,2.4,2.2,.102),loc=3,ncol=6,mode='expand',borderaxespad=0.)
+#labels = (r'$\delta_{de}$',r'$V_{de}$')
+#py.legend(labels,bbox_to_anchor=(-1.2,2.4,2.2,.102),loc=3,ncol=6,mode='expand',borderaxespad=0.)
 
 #######################################################################################
 # Saving the figure 

@@ -10,12 +10,477 @@ Module perturbations
 
 Contains
 
+  !##################################
+  ! SETTING INITIAL CONDITIONS STARTS
+  !##################################
+
+  subroutine set_initial_conditions()
+
+    Implicit none
+
+    Logical :: mode_is_subhorizon,mode_is_subsoundhorizon 
+
+    write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER H(a) AT INITIAL SCALE FACTOR ',&
+         initial_scale_factor, ' IS : ', conformal_Hubble_parameter(initial_scale_factor), ' Mpc^{-1}'
+
+    write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT INITIAL SCALE FACTOR ', &
+         initial_scale_factor, ' IS : ', conformal_Hubble_parameter(initial_scale_factor)/speedL, ' Mpc^{-1}'
+
+    write(UNIT_EXE_FILE,*) 'THE CONFORMAL HUBBLE PARAMETER H(a) AT FINAL SCALE FACTOR ',&
+         final_scale_factor, ' IS : ', conformal_Hubble_parameter(final_scale_factor),' Mpc^{-1}'
+
+    write(UNIT_EXE_FILE,*) 'THE WAVENUMBER K CORRESPONDING TO THE HORIZON AT FINAL SCALE FACTOR ', &
+         final_scale_factor, ' IS : ', conformal_Hubble_parameter(final_scale_factor)/speedL, ' Mpc^{-1}'
+
+    If (wavenumber_k .lt. conformal_Hubble_parameter(initial_scale_factor)/speedL) then
+
+       write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS BEYOND THE HORIZON (SUPER-HORIZON)' 
+
+       mode_is_subhorizon = .false.
+
+       mode_is_subsoundhorizon = .false. 
+
+       If (wavenumber_k .lt. conformal_Hubble_parameter(final_scale_factor)/speedL) then
+
+          write(UNIT_EXE_FILE,*) 'CURRENT MODE ENDS BEYOND THE HORIZON (SUPER-HORIZON)'
+
+       Else
+
+          write(UNIT_EXE_FILE,*) 'CURRENT MODE ENDS INSIDE THE HORIZON (SUB-HORIZON)'
+
+          If (MG_parametrisation .eq. 'GR_DE') then 
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_horizon_crossing(wavenumber_k) 
+
+             If ( (wavenumber_k/conformal_Hubble_parameter(final_scale_factor))**2 .lt. &
+                  (1.d0/effective_sound_speed_squared(final_scale_factor,wavenumber_k)) ) then 
+
+                write(UNIT_EXE_FILE,*) 'THE MODE ENDS BEYOND THE EFFECTIVE SOUND HORIZON (SUPER-SOUND-HORIZON)'
+
+             Else
+
+                write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE EFFECTIVE SOUND HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                     scale_factor_effective_sound_horizon(initial_scale_factor,wavenumber_k)
+
+             End if
+
+          Else if (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_horizon_crossing(wavenumber_k) 
+
+          End if
+
+       End if
+
+    Else
+
+       write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS INSIDE THE HORIZON (SUB-HORIZON)'
+
+       mode_is_subhorizon = .true.
+
+       If (MG_parametrisation .eq. 'GR_DE') then
+
+          If ( (wavenumber_k/conformal_Hubble_parameter(initial_scale_factor))**2 .lt. &
+               (1.d0/effective_sound_speed_squared(initial_scale_factor,wavenumber_k)) ) then 
+
+             write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS BEYOND THE SOUND HORIZON (SUPER-SOUND-HORIZON)'
+
+             mode_is_subsoundhorizon = .false.
+
+          Else
+
+             write(UNIT_EXE_FILE,*) 'CURRENT MODE STARTS INSIDE THE SOUND HORIZON (SUB-SOUND-HORIZON)'
+
+             mode_is_subsoundhorizon = .true.
+
+          End if
+
+       Else if (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+          continue
+
+       End if
+
+       If (wavenumber_k .lt. conformal_Hubble_parameter(final_scale_factor)/speedL) then
+
+          write(UNIT_EXE_FILE,*) 'CURRENT MODE ENDS BEYOND THE HORIZON (SUPER-HORIZON)'
+
+       Else
+
+          write(UNIT_EXE_FILE,*) 'CURRENT MODE ENDS INSIDE THE HORIZON (SUB-HORIZON)'
+
+          If (MG_parametrisation .eq. 'GR_DE') then 
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_horizon_crossing(wavenumber_k) 
+
+             If ( (wavenumber_k/conformal_Hubble_parameter(final_scale_factor))**2 .lt. &
+                  (1.d0/effective_sound_speed_squared(final_scale_factor,wavenumber_k)) ) then 
+
+                write(UNIT_EXE_FILE,*) 'THE MODE ENDS BEYOND THE EFFECTIVE SOUND HORIZON (SUPER-SOUND-HORIZON)'
+
+             Else
+
+                write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE EFFECTIVE SOUND HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                     scale_factor_effective_sound_horizon(initial_scale_factor,wavenumber_k)
+
+             End if
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE EFFECTIVE SOUND HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_effective_sound_horizon(initial_scale_factor,wavenumber_k)
+
+          Else if (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_horizon_crossing(wavenumber_k) 
+
+          End if
+
+       End if
+
+    End if
+
+    If ( wavenumber_k/ks .lt. lower_limit_ks ) then
+
+       write(UNIT_EXE_FILE,*) 'MODE WAVELENGTH IS GREATER THAN SOUND HORIZON AT MATTER-RADIATION EQUALITY'
+
+    Else if ( wavenumber_k/ks .gt. upper_limit_ks ) then
+
+       write(UNIT_EXE_FILE,*) 'MODE WAVELENGTH IS SMALLER THAN SOUND HORIZON AT MATTER-RADIATION EQUALITY'
+
+    Else
+
+       write(UNIT_EXE_FILE,*) 'MODE DOES NOT SATISFY CONDITION FOR INITIAL POTENTIAL IN 1112.4837'
+
+       stop
+
+    End if
+
+    write(UNIT_EXE_FILE,*) 'EQUATIONS FOR PERTURBATIONS ARE WRITTEN IN THE NEWTONIAN GAUGE. INITIAL CONDITIONS'&
+         'ARE SET DURING MATTER DOMINATION WHERE THE TWO GRAVITATIONAL POTENTIALS ARE EQUAL'
+
+    write(UNIT_EXE_FILE,*) 'INITIAL VALUE FOR POTENTIAL IS: ',initial_condition_gravitational_potential(wavenumber_k)
+
+    write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS ARE SET AT a : ', initial_scale_factor
+
+    write(UNIT_EXE_FILE,*) 'SYSTEM OF DIFFERENTIAL EQUATIONS IS WRITTEN IN THE CODE AS FOLLOWS: '
+
+    If ( (MG_parametrisation .eq. 'GR_DE') .and. (dimension_system_ode .eq. 4) ) then
+
+       write(UNIT_EXE_FILE,*) 'Y(1) IS \delta_m, MATTER DENSITY PERTURBATION '
+
+       initial_conditions_system(1) = matter_density_perturbation(initial_scale_factor,wavenumber_k) ! MATTER DENSITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
+
+       If (mode_is_subhorizon) then 
+
+          If (mode_is_subsoundhorizon) then
+
+             initial_conditions_system(2) = de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+
+          Else
+
+             initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-SOUND SCALES
+
+          End if
+
+       Else 
+
+          initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-SOUND SCALES
+
+       End if
+
+       write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
+
+       initial_conditions_system(3) = matter_velocity_perturbation(initial_scale_factor,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(4) IS \theta_de, DARK ENERGY VELOCITY PERTURBATION '
+
+       If (mode_is_subhorizon) then 
+
+          If (mode_is_subsoundhorizon) then
+
+             initial_conditions_system(4) = de_velocity_perturbation_sub_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+
+          Else
+
+             initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+          End if
+
+       Else 
+
+          initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE VELOCITY PERTURBATIONS ON SUPER-SOUND SCALES
+
+       End if
+
+    Else if ( (MG_parametrisation .eq. 'GR_DE') .and. (dimension_system_ode .eq. 6) ) then
+
+       write(UNIT_EXE_FILE,*) 'Y(1) IS \delta_m, MATTER DENSITY PERTURBATION '
+
+       initial_conditions_system(1) = matter_density_perturbation(initial_scale_factor,wavenumber_k) ! MATTER DENSITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
+
+       If (mode_is_subhorizon) then 
+
+          If (mode_is_subsoundhorizon) then
+
+             initial_conditions_system(2) = de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+
+          Else
+
+             initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+          End if
+
+       Else 
+
+          initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+       End if
+
+       write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
+
+       initial_conditions_system(3) = matter_velocity_perturbation(initial_scale_factor,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(4) IS \theta_de, DARK ENERGY VELOCITY PERTURBATION '
+
+       If (mode_is_subhorizon) then 
+
+          If (mode_is_subsoundhorizon) then
+
+             initial_conditions_system(4) = de_velocity_perturbation_sub_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+
+          Else
+
+             initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+          End if
+
+       Else 
+
+          initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+       End if
+
+       write(UNIT_EXE_FILE,*) 'Y(5) IS \phi, GRAVITATIONAL POTENTIAL '
+
+       initial_conditions_system(5) = initial_condition_gravitational_potential(wavenumber_k)
+
+       write(UNIT_EXE_FILE,*) 'Y(6) IS \psi, GRAVITATIONAL POTENTIAL '
+
+       initial_conditions_system(6) = initial_condition_gravitational_potential(wavenumber_k)
+
+    Else if ( ( ( (MG_parametrisation .eq. 'Savvas') .or. (MG_parametrisation .eq. 'GR_LAMBDA') ) .or. &
+         ( (MG_parametrisation .eq. 'HS_Basilakos') .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos')&
+         ) ) .and. (approach .eq. 'CHI') ) then
+
+       write(UNIT_EXE_FILE,*) 'Y(1) IS \delta_m, MATTER DENSITY PERTURBATION '
+
+       initial_conditions_system(1) = matter_density_perturbation(initial_scale_factor,wavenumber_k) ! MATTER DENSITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(2) IS \theta_m, MATTER VELOCITY PERTURBATION '
+
+       initial_conditions_system(2) = matter_velocity_perturbation(initial_scale_factor,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(3) IS \phi_+ , POTENTIAL \phi_+ '
+
+       initial_conditions_system(3) = initial_condition_gravitational_potential(wavenumber_k) ! \phi_+
+
+       write(UNIT_EXE_FILE,*) 'Y(4) IS \chi, POTENTIAL \chi '
+
+       initial_conditions_system(4) = 0.d0 ! \chi
+
+    Else if ( ( (MG_parametrisation .eq. 'Savvas') .or. ( (MG_parametrisation .eq. 'HS_Basilakos') &
+         .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) ) .and. (approach .eq. 'EF') ) then
+
+       write(UNIT_EXE_FILE,*) 'Y(1) IS \delta_m, MATTER DENSITY PERTURBATION '
+
+       initial_conditions_system(1) = matter_density_perturbation(initial_scale_factor,wavenumber_k) ! MATTER DENSITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
+
+       If (mode_is_subhorizon) then
+
+          initial_conditions_system(2) = dark_energy_density_perturbation(initial_scale_factor,initial_conditions_system(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB HORIZON SCALES
+
+       Else
+
+          initial_conditions_system(2) = dark_energy_density_perturbation(initial_scale_factor,initial_conditions_system(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+       End if
+
+       write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
+
+       initial_conditions_system(3) = matter_velocity_perturbation(initial_scale_factor,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(4) IS (1+wDE)*\theta_de, DARK ENERGY VELOCITY PERTURBATION '
+
+       If (mode_is_subhorizon) then
+
+          initial_conditions_system(4) = dark_energy_velocity_perturbation(initial_scale_factor,initial_conditions_system(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB HORIZON SCALES
+
+       Else
+
+          initial_conditions_system(4) = dark_energy_velocity_perturbation(initial_scale_factor,initial_conditions_system(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+
+       End if
+
+       write(UNIT_EXE_FILE,*) 'Y(5) IS \phi, POTENTIAL \phi '
+
+       initial_conditions_system(5) = initial_condition_gravitational_potential(wavenumber_k)
+        
+       write(UNIT_EXE_FILE,*) 'Y(6) IS \psi, POTENTIAL \psi '
+
+       initial_conditions_system(6) = initial_condition_gravitational_potential(wavenumber_k)
+
+    End if
+
+  end subroutine set_initial_conditions
+
+  !##################################
+  ! SETTING INITIAL CONDITIONS ENDS
+  !##################################
+
+  !####################################
+  ! WRITING ANALYTICAL SOLUTIONS STARTS
+  !####################################
+
+  subroutine write_analytical_solutions()
+
+    Implicit none
+
+    Integer*4 :: m
+
+    Real*8 :: Z
+
+    If ( MG_parametrisation .eq. 'GR_DE' ) then
+
+       If (dimension_system_ode .eq. 4) then
+
+          write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
+
+          write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_{de}^{sup-hor}    v_{de}^{sup-hor}   '//trim(' ')//&
+               '\delta_{de}^{sub-sound}    v_{de}^{sub-sound}'
+
+          Do m=1,101
+
+          Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
+               log10(initial_scale_factor))/real(101-1))
+
+             ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM EQ. (3.3) IN MY PAPER, THAT IS, v_{de}.
+             write(UNIT_OUTPUT_FILE2,89) Z,dark_energy_density_perturbation_super_horizon(wavenumber_k),&
+                  -dark_energy_velocity_perturbation_super_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/((1.d0+&
+                  equation_of_state(Z))*sqrt(Z)*wavenumber_k),&
+                  dark_energy_density_perturbation_sub_sound_horizon(Z,wavenumber_k),&
+                  -dark_energy_velocity_perturbation_sub_sound_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/(wavenumber_k*(1.d0+&
+                  equation_of_state(Z))*sqrt(Z))
+
+89           Format(E20.10,E20.10,E20.10,E20.10,E20.10)
+
+          End do
+
+       Else if (dimension_system_ode .eq. 6) then
+
+          write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
+
+          write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_{de}^{sup-hor}    v_{de}^{sup-hor}   '//trim(' ')//&
+               '\delta_{de}^{sub-sound}    v_{de}^{sub-sound}'
+
+          Do m=1,101
+
+          Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
+               log10(initial_scale_factor))/real(101-1))
+
+             ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM EQ. (3.3) IN MY PAPER, THAT IS, v_{de}.
+             write(UNIT_OUTPUT_FILE2,88) Z,dark_energy_density_perturbation_super_horizon(wavenumber_k),&
+                  -dark_energy_velocity_perturbation_super_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/((1.d0+&
+                  equation_of_state(Z))*sqrt(Z)*wavenumber_k),&
+                  dark_energy_density_perturbation_sub_sound_horizon(Z,wavenumber_k),&
+                  -dark_energy_velocity_perturbation_sub_sound_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/(wavenumber_k*(1.d0+&
+                  equation_of_state(Z))*sqrt(Z))
+
+88           Format(E20.10,E20.10,E20.10,E20.10,E20.10)!,E20.10,E20.10)
+
+          End do
+
+          write(UNIT_EXE_FILE,*) 'REQUIRES FURTHER IMPLEMENTATION: POTENTIALS MUST BE ADDED IN OUTPUT'
+
+       End if
+
+    Else if ( ( ( (MG_parametrisation .eq. 'Savvas') .or. (MG_parametrisation .eq. 'GR_LAMBDA') ) .or. &
+         ( (MG_parametrisation .eq. 'HS_Basilakos') .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos')&
+         ) ) .and. (approach .eq. 'CHI') ) then
+
+       write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
+
+       write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_m    V_m    phi_plus    chi'
+
+       Do m=1,101
+
+          Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
+               log10(initial_scale_factor))/real(101-1))
+
+          ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM DRAFT
+          write(UNIT_OUTPUT_FILE2,91) Z,matter_density_perturbation(Z,wavenumber_k),&
+               matter_velocity_perturbation(Z,wavenumber_k)/wavenumber_k,phi_plus(Z),chi(Z)
+
+91        Format(E20.10,E20.10,E20.10,E20.10,E20.10)
+
+       End do
+
+    Else if ( ( (MG_parametrisation .eq. 'Savvas') .or. ( (MG_parametrisation .eq. 'HS_Basilakos') .or. &
+         (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) ) .and. (approach .eq. 'EF') ) then
+
+       write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
+
+       write(UNIT_OUTPUT_FILE2,*) '# scale_factor  \delta_sub_horizon  V_sub_horizon  \delta_m  V_m  '&
+            'phi  psi'
+
+       Do m=1,101
+
+          Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
+               log10(initial_scale_factor))/real(101-1))
+
+          ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM DRAFT
+          write(UNIT_OUTPUT_FILE2,90) Z,dark_energy_density_perturbation(Z,&
+               matter_density_perturbation(Z,wavenumber_k)),&
+               dark_energy_velocity_perturbation(Z,&
+               matter_density_perturbation(Z,wavenumber_k)),&
+               matter_density_perturbation(Z,wavenumber_k),&
+               matter_velocity_perturbation(Z,wavenumber_k),&
+               phi(Z,wavenumber_k,matter_density_perturbation(Z,wavenumber_k),&
+               dark_energy_density_perturbation(Z,&
+               matter_density_perturbation(Z,wavenumber_k)),matter_velocity_perturbation(Z,wavenumber_k),&
+               dark_energy_velocity_perturbation(Z,matter_density_perturbation(Z,wavenumber_k))),&
+               psi(Z,wavenumber_k,matter_density_perturbation(Z,wavenumber_k),&
+               dark_energy_density_perturbation(Z,&
+               matter_density_perturbation(Z,wavenumber_k)),matter_velocity_perturbation(Z,wavenumber_k),&
+               dark_energy_velocity_perturbation(Z,matter_density_perturbation(Z,wavenumber_k)))
+
+90        Format(E20.10,E20.10,E20.10,ES20.10,ES20.10,ES20.10,ES20.10)
+
+       End do
+
+    End if
+
+  end subroutine write_analytical_solutions
+
+  !####################################
+  ! WRITING ANALYTICAL SOLUTIONS ENDS
+  !####################################
 
   !###################################################################################
   ! SOME EQUATIONS THAT ARE USED ALONG WITH THE EQUATIONS FOR INITIAL CONDITIONS ABOVE
   !###################################################################################
 
-  ! EFFECTIVE SOUND SPEED 
+  !#####################################
+  ! EFFECTIVE SOUND SPEED SQUARED BEGINS 
+  !#####################################
 
   function effective_sound_speed_squared(a,k)
 
@@ -23,18 +488,124 @@ Contains
 
     Real*8 :: a,k,effective_sound_speed_squared
 
-    If ( MG_parametrisation .eq. 'GR' ) then
+    If ( MG_parametrisation .eq. 'GR_DE' ) then
 
-       effective_sound_speed_squared = cs2_fld - 2.d0*f_pi/3.d0
+       effective_sound_speed_squared = sound_speed_squared(a) - 2.d0*f_pi/3.d0
 
-    Else
+    Else if (MG_parametrisation .eq. 'GR_LAMBDA') then 
+
+       effective_sound_speed_squared = sound_speed_squared(a)
+
+    Else if ( ( (MG_parametrisation .eq. 'Starobinsky_Basilakos') .or. &
+         (MG_parametrisation .eq. 'HS_Basilakos') ) .or. (MG_parametrisation .eq. 'Savvas') ) then
 
        effective_sound_speed_squared = sound_speed_squared(a) - (2.d0/3.d0)*wavenumber_k**2*FR(a)/&
             (a**2*F_MG(a) - a**2*F_MG(a)**2 + wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a))
 
     End if
 
-  end function effective_sound_speed_squared
+  end function effective_sound_speed_squared 
+
+  subroutine check_effective_sound_speed_squared()
+
+    Implicit none
+
+    If (MG_parametrisation .eq. 'GR_DE' .and. (approach .eq. 'EF') ) then
+
+       If ( effective_sound_speed_squared(initial_scale_factor,wavenumber_k) .ge. 0 ) then
+
+          If ( effective_sound_speed_squared(initial_scale_factor,wavenumber_k) .gt. 1.d0) then
+
+             write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED GREATER THAN ONE. CAUSALITY ISSUES'
+
+             stop
+
+          Else
+
+             write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED IS POSITIVE: ',&
+                  effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
+
+          End if
+          
+       Else
+
+          write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED IS NEGATIVE: ',&
+               effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
+
+          write(UNIT_EXE_FILE,*) 'AND WILL POSSIBLY LEAD TO INSTABILITIES IN THE PERTURBATIONS'
+
+       End if
+
+    Else if ( ( ( (MG_parametrisation .eq. 'Savvas')  .or. (MG_parametrisation .eq. 'HS_Basilakos') ) .or. &
+         (MG_parametrisation .eq. 'Starobinsky_Basilakos')  ) .and. (approach .eq. 'EF') ) then
+
+       If ( effective_sound_speed_squared(initial_scale_factor,wavenumber_k) .ge. 0 ) then
+
+          write(UNIT_EXE_FILE,*) 'AT INITIAL SCALE FACTOR a = ', initial_scale_factor
+
+          write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED IS : ', &
+               effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
+
+       Else 
+
+          write(UNIT_EXE_FILE,*) 'AT ONSET EFFECTIVE SOUND SPEED SQUARED IS NEGATIVE: ',&
+               effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
+
+          write(UNIT_EXE_FILE,*) 'AND WILL POSSIBLY LEAD TO INSTABILITIES IN THE PERTURBATIONS'
+
+       End if
+
+       If ( effective_sound_speed_squared(final_scale_factor,wavenumber_k) .ge. 0 ) then
+
+          write(UNIT_EXE_FILE,*) 'AT FINAL SCALE FACTOR a = ', final_scale_factor
+
+          write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED IS : ', &
+               effective_sound_speed_squared(final_scale_factor,wavenumber_k)
+
+       Else
+
+          write(UNIT_EXE_FILE,*) 'TODAY S EFFECTIVE SOUND SPEED SQUARED IS NEGATIVE: ', &
+               effective_sound_speed_squared(final_scale_factor,wavenumber_k)
+
+       End If
+
+    End if
+
+  end subroutine check_effective_sound_speed_squared
+
+  !###################################
+  ! EFFECTIVE SOUND SPEED SQUARED ENDS 
+  !###################################
+
+  !##################################
+  ! POTENTIAL FOR CHI APPROACH BEGINS
+  !##################################
+
+  function chi(a)
+
+    Implicit none 
+
+    Real*8 :: a,chi
+
+    chi = -2.d0*wavenumber_k**2*fMG_RR(a)*F_MG(a)*phi_plus(a)/( F_MG(a)*a**2 + &
+         3.d0*wavenumber_k**2*fMG_RR(a) )
+
+  end function chi
+
+  function phi_plus(a)
+
+    Implicit none
+
+    Real*8 :: a,phi_plus
+
+    phi_plus = -3.d0*H0**2*a**2/2.d0/wavenumber_k**2/F_MG(a)*Omega_Matter(a)*&
+         matter_density_perturbation(a,wavenumber_k)
+
+  end function phi_plus
+
+  !################################
+  ! POTENTIAL FOR CHI APPROACH ENDS
+  !################################
 
   ! ADIABATIC SOUND SPEED FOR AN EFFECTIVE FLUID FROM F(R) PARAMETRISATION BY BASILAKOS ET AL. 
 
@@ -97,7 +668,7 @@ Contains
 
        anisotropic_stress = -2.d10
 
-    Else if (MG_parametrisation .eq. 'GR') then
+    Else if (MG_parametrisation .eq. 'GR_DE') then
 
        anisotropic_stress = e_pi*Delta_matter(a,wavenumber_k,y1,y3) + (f_pi/(1.d0 + &
             g_pi**2*conformal_Hubble_parameter(a)**2/wavenumber_k**2))*Delta_dark_energy(a,wavenumber_k,y2,y4)
@@ -240,7 +811,7 @@ Contains
 
     Real*8 :: a,k,y1,y3,Delta_matter
 
-    If (MG_parametrisation .eq. 'GR') then
+    If (MG_parametrisation .eq. 'GR_DE') then
 
        Delta_matter = y1 + 3.d0*conformal_Hubble_parameter(a)*y3/k**2
 
@@ -260,9 +831,9 @@ Contains
 
     Real*8 :: a,k,y2,y4,Delta_dark_energy
 
-    If (MG_parametrisation .eq. 'GR') then
+    If (MG_parametrisation .eq. 'GR_DE') then
 
-       Delta_dark_energy = y2 + 3.d0*conformal_Hubble_parameter(a)*(1.d0 + w0_fld)*y4/k**2
+       Delta_dark_energy = y2 + 3.d0*conformal_Hubble_parameter(a)*(1.d0 + equation_of_state(a))*y4/k**2
 
     Else
 
@@ -280,9 +851,9 @@ Contains
 
     Real*8 :: a,y1,y2,y3,y4,sigma
 
-    If (MG_parametrisation .eq. 'GR') then
+    If (MG_parametrisation .eq. 'GR_DE') then
 
-       sigma = 2.d0*anisotropic_stress(a,y1,y2,y3,y4)/(3.d0*(1.d0+w0_fld))
+       sigma = 2.d0*anisotropic_stress(a,y1,y2,y3,y4)/(3.d0*(1.d0+equation_of_state(a)))
 
     Else
 
@@ -306,10 +877,10 @@ Contains
 
     Real*8 :: a,k,y1,y2,y3,y4,phi
 
-    If (MG_parametrisation .eq. 'GR') then
+    If (MG_parametrisation .eq. 'GR_DE') then
 
        phi = -((3.d0*H0**2)/(2.d0*k**2))*(Omega_m*Delta_matter(a,k,y1,y3)/a + &
-            (1 - Omega_m)*Delta_dark_energy(a,k,y2,y4)/a**(1.d0 + 3.d0*w0_fld))
+            (1 - Omega_m)*Delta_dark_energy(a,k,y2,y4)/a**(1.d0 + 3.d0*equation_of_state(a)))
 
     Else
 
@@ -328,10 +899,10 @@ Contains
 
     Real*8 :: a,k,y1,y2,y3,y4,psi
 
-    If (MG_parametrisation .eq. 'GR') then
+    If (MG_parametrisation .eq. 'GR_DE') then
 
        psi = -9.d0*H0**2*(1.d0+w0_fld)*sigma(a,y1,y2,y3,y4)*(1.d0-&
-            Omega_m)/(2.d0*k**2*a**(1.d0+3.d0*w0_fld)) + phi(a,k,y1,y2,y3,y4)
+            Omega_m)/(2.d0*k**2*a**(1.d0+3.d0*equation_of_state(a))) + phi(a,k,y1,y2,y3,y4)
 
     Else
 

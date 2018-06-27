@@ -19,9 +19,7 @@ Contains
 
     Implicit none
 
-    Real*8 ::  a,k,B,matter_density_perturbation
-
-    B = initial_condition_gravitational_potential(k)
+    Real*8 ::  a,k,matter_density_perturbation
 
     matter_density_perturbation = delta_0(k)*(a + 3.d0*H0**2*Omega_m/k**2 )
 
@@ -33,9 +31,7 @@ Contains
 
     Implicit none
 
-    Real*8 :: a,k,B,matter_velocity_perturbation
-
-    B = initial_condition_gravitational_potential(k)
+    Real*8 :: a,k,matter_velocity_perturbation
 
     matter_velocity_perturbation = -delta_0(k)*sqrt(a)*H0*Sqrt(Omega_m)
 
@@ -47,22 +43,11 @@ Contains
 
     Implicit none 
 
-    Real*8 :: a,k,B,dark_energy_density_perturbation_super_sound_horizon
+    Real*8 :: a,k,dark_energy_density_perturbation_super_sound_horizon
 
-    B = initial_condition_gravitational_potential(k)
-
-    If (MG_parametrisation .eq. 'GR') then
-       
-       dark_energy_density_perturbation_super_sound_horizon = delta_0(k)*(1.d0 + &
-            w0_fld)*a*(1.d0/(1.d0 - 3.d0*w0_fld) + 3.d0*H0**2*Omega_m/(k**2*a) ) 
-
-    Else
-
-       dark_energy_density_perturbation_super_sound_horizon = delta_0(k)*(1.d0 + &
-            equation_of_state(a))*a*k**2*(1.d0/(1.d0 - 3.d0*equation_of_state(a)) &
-            + 3.d0*H0**2*Omega_m/(k**2*a) ) 
-
-    End if
+    dark_energy_density_perturbation_super_sound_horizon = delta_0(k)*(1.d0 + &
+         equation_of_state(a))*a*(1.d0/(1.d0 - 3.d0*equation_of_state(a)) &
+         + 3.d0*H0**2*Omega_m/k**2/a ) 
 
   end function dark_energy_density_perturbation_super_sound_horizon
 
@@ -70,13 +55,9 @@ Contains
 
   function dark_energy_velocity_perturbation_super_sound_horizon(a,k)
 
-    
-
     Implicit none
 
-    Real*8 :: a,k,B,dark_energy_velocity_perturbation_super_sound_horizon
-
-    B = initial_condition_gravitational_potential(k)
+    Real*8 :: a,k,dark_energy_velocity_perturbation_super_sound_horizon
 
     dark_energy_velocity_perturbation_super_sound_horizon = -delta_0(k)*H0*Sqrt(a*Omega_m) 
 
@@ -92,16 +73,8 @@ Contains
 
     B = initial_condition_gravitational_potential(k)
 
-    If (MG_parametrisation .eq. 'GR') then
-
-       de_density_perturbation_sub_sound_horizon = -B*(1.d0 + w0_fld)/cs2_fld
-
-    Else
-
-       de_density_perturbation_sub_sound_horizon = -B*(1.d0 + &
-            equation_of_state(initial_scale_factor))/sound_speed_squared(initial_scale_factor)
-
-    End if
+    de_density_perturbation_sub_sound_horizon = -B*(1.d0 + &
+         equation_of_state(initial_scale_factor))/sound_speed_squared(initial_scale_factor)
 
   end function de_density_perturbation_sub_sound_horizon
 
@@ -111,21 +84,10 @@ Contains
 
     Implicit none 
 
-    Real*8 :: a,B,k,de_velocity_perturbation_sub_sound_horizon
+    Real*8 :: a,k,de_velocity_perturbation_sub_sound_horizon
 
-    B = initial_condition_gravitational_potential(k)
-    
-    If (MG_parametrisation .eq. 'GR') then
-
-       de_velocity_perturbation_sub_sound_horizon = -3.d0*conformal_Hubble_parameter(a)*&
-            (cs2_fld - w0_fld)*de_density_perturbation_sub_sound_horizon(k)
-
-    Else
-
-       de_velocity_perturbation_sub_sound_horizon = -3.d0*conformal_Hubble_parameter(a)*&
-            (sound_speed_squared(a) - equation_of_state(a))*de_density_perturbation_sub_sound_horizon(k)
-
-    End if
+    de_velocity_perturbation_sub_sound_horizon = -3.d0*conformal_Hubble_parameter(a)*&
+         (sound_speed_squared(a) - equation_of_state(a))*de_density_perturbation_sub_sound_horizon(k)
 
   end function de_velocity_perturbation_sub_sound_horizon
 
@@ -205,8 +167,17 @@ Contains
 
     Real*8 :: a,sound_speed_squared
 
-    If ( a .lt. switch_off_pressure_perturbation_terms) then
+    If (MG_parametrisation .eq. 'GR_DE') then
 
+       sound_speed_squared = cs2_fld
+
+    Else if (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+       sound_speed_squared = 0.d0
+
+    Else if ( ( (MG_parametrisation .eq. 'Starobinsky_Basilakos') .or. &
+         (MG_parametrisation .eq. 'HS_Basilakos') ) .or. (MG_parametrisation .eq. 'Savvas') ) then
+       
        sound_speed_squared = (2.d0*wavenumber_k**2*FR(a))/(3.d0*a**2*F_MG(a) - &
             3.d0*a**2*F_MG(a)**2 + 3.d0*wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)) &
 
@@ -221,12 +192,17 @@ Contains
             F_MG_double_prime(a))/( wavenumber_k**2 - F_MG(a)*wavenumber_k**2 + wavenumber_k**4*(2.d0 - &
             3.d0*F_MG(a))*FR(a)/a**2/F_MG(a)  )
 
-    Else
-
-       sound_speed_squared = (2.d0*wavenumber_k**2*FR(a))/(3.d0*a**2*F_MG(a) - &
-            3.d0*a**2*F_MG(a)**2 + 3.d0*wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)) 
-
     End if
+
+!!$    If ( a .lt. switch_off_pressure_perturbation_terms) then
+!!$
+!!$
+!!$    Else
+!!$
+!!$       sound_speed_squared = (2.d0*wavenumber_k**2*FR(a))/(3.d0*a**2*F_MG(a) - &
+!!$            3.d0*a**2*F_MG(a)**2 + 3.d0*wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)) 
+!!$
+!!$    End if
 
   end function sound_speed_squared
 
