@@ -4519,14 +4519,14 @@ int perturb_total_stress_energy(
   a2 = a * a;
   a_prime_over_a = ppw->pvecback[pba->index_bg_H] * a;
   k2=k*k;
-  conformal_Hubble_parameter = ppw->pvecback[pba->index_bg_conformal_H_fR];
-  derivative_conformal_Hubble_parameter = ppw->pvecback[pba->index_bg_derivative_conformal_H_fR];
+  //  conformal_Hubble_parameter = ppw->pvecback[pba->index_bg_conformal_H_fR];
+  // derivative_conformal_Hubble_parameter = ppw->pvecback[pba->index_bg_derivative_conformal_H_fR];
   F_MG = ppw->pvecback[pba->index_bg_F_fR];
-  F_MG_prime = ppw->pvecback[pba->index_bg_Fprime_fR];
+  //F_MG_prime = ppw->pvecback[pba->index_bg_Fprime_fR];
   F_MG_double_prime = ppw->pvecback[pba->index_bg_Fdoubleprime_fR];
   FR = ppw->pvecback[pba->index_bg_FR_fR];
-  FR_prime = ppw->pvecback[pba->index_bg_FRprime_fR];
-  FR_double_prime = ppw->pvecback[pba->index_bg_FRdoubleprime_fR];
+  //FR_prime = ppw->pvecback[pba->index_bg_FRprime_fR];
+  //FR_double_prime = ppw->pvecback[pba->index_bg_FRdoubleprime_fR];
 
   //H_over_H0 = ppw->pvecback[pba->index_bg_H]/pba->H0;
   //H_over_H0_2 = pow(H_over_H0,2);
@@ -4626,8 +4626,13 @@ int perturb_total_stress_energy(
     {
       if (pba->has_fR == _TRUE_)
 	{
+	  
+	  DE_pressure_perturbation_fR = (2.*k2*FR/a2/F_MG + 
+					 3.*(1. + 5.*k2*FR/a2/F_MG)*F_MG_double_prime/k2)/
+	    ( 1. + 3.*k2*FR/a2/F_MG )/3./F_MG*(ppw->pvecback[pba->index_bg_rho_cdm] + ppw->pvecback[pba->index_bg_rho_b])*
+	(y[ppw->pv->index_pt_delta_cdm] + y[ppw->pv->index_pt_delta_b] );
 
-      DE_pressure_perturbation_fR = 2.*k2*FR/(3.*a2*pow(F_MG,2) + 
+	/*2.*k2*FR/(3.*a2*pow(F_MG,2) + 
             9.*k2*FR*F_MG ) + 
 
 	((a*pow(conformal_Hubble_parameter,2) + a2*conformal_Hubble_parameter*
@@ -4637,20 +4642,24 @@ int perturb_total_stress_energy(
 
 	( a*pow(conformal_Hubble_parameter,2)*F_MG_prime + a2*conformal_Hubble_parameter*
 	  derivative_conformal_Hubble_parameter*F_MG_prime + a2*pow(conformal_Hubble_parameter,2)*
-	      F_MG_double_prime)/(F_MG*k2 + 3.*pow(k2,2)*FR/a2  );
+	  F_MG_double_prime)/(F_MG*k2 + 3.*pow(k2,2)*FR/a2  ); */
 
-      DE_anisotropic_stress_fR = k2*FR/(a2*pow(F_MG,2) + 3.*k2*FR*F_MG )*(ppw->pvecback[pba->index_bg_rho_cdm] + 
-      ppw->pvecback[pba->index_bg_rho_b])/ppw->pvecback[pba->index_bg_rho_fld]*(y[ppw->pv->index_pt_delta_cdm] + y[ppw->pv->index_pt_delta_b] );
+	  DE_anisotropic_stress_fR = k2*FR/a2/F_MG/(  1. + 3.*k2*FR/a2/F_MG )/F_MG*
+	    ppw->pvecback[pba->index_bg_rho_fld]*(y[ppw->pv->index_pt_delta_cdm] + y[ppw->pv->index_pt_delta_b] )/
+	    ppw->pvecback[pba->index_bg_rho_fld];
+
+	/*k2*FR/(a2*pow(F_MG,2) + 3.*k2*FR*F_MG )*(ppw->pvecback[pba->index_bg_rho_cdm] + 
+	  ppw->pvecback[pba->index_bg_rho_b])/ppw->pvecback[pba->index_bg_rho_fld]*(y[ppw->pv->index_pt_delta_cdm] + y[ppw->pv->index_pt_delta_b] );*/
 
       pi_fld = DE_anisotropic_stress_fR;
-      shear_fld = 2.*pi_fld/3./(1.+ ppw->pvecback[pba->index_bg_w_fR]);
+      /*shear_fld = 2.*pi_fld/3./(1.+ ppw->pvecback[pba->index_bg_w_fR]);*/
 
       ppw->delta_rho += ppw->pvecback[pba->index_bg_rho_fld]*y[ppw->pv->index_pt_delta_fld];
       //      ppw->rho_plus_p_theta += (1.+ ppw->pvecback[pba->index_bg_w_fR])*ppw->pvecback[pba->index_bg_rho_fld]*y[ppw->pv->index_pt_theta_fld];
       ppw->rho_plus_p_theta += ppw->pvecback[pba->index_bg_rho_fld]*y[ppw->pv->index_pt_theta_fld];
-      ppw->delta_p = ppw->delta_p + DE_pressure_perturbation_fR*(ppw->pvecback[pba->index_bg_rho_cdm] + ppw->pvecback[pba->index_bg_rho_b])*
-	(y[ppw->pv->index_pt_delta_cdm] + y[ppw->pv->index_pt_delta_b] );
-      ppw->rho_plus_p_shear = ppw->rho_plus_p_shear  + (1.+ ppw->pvecback[pba->index_bg_w_fR] )*ppw->pvecback[pba->index_bg_rho_fld]*shear_fld;
+      ppw->delta_p = ppw->delta_p + DE_pressure_perturbation_fR; 
+      ppw->rho_plus_p_shear = ppw->rho_plus_p_shear  + ppw->pvecback[pba->index_bg_rho_fld]*2.*pi_fld/3.; 
+	/*(1.+ ppw->pvecback[pba->index_bg_w_fR] )*ppw->pvecback[pba->index_bg_rho_fld]*shear_fld;*/
 
 	}
       else
@@ -5794,14 +5803,14 @@ int perturb_derivs(double tau,
   //H_over_H0 = pvecback[pba->index_bg_H]/pba->H0;
   //H_over_H0_2 = pow(H_over_H0,2);
   Omega0_M = pba->Omega0_b+pba->Omega0_cdm;
-  conformal_Hubble_parameter = ppw->pvecback[pba->index_bg_conformal_H_fR];
-  derivative_conformal_Hubble_parameter = ppw->pvecback[pba->index_bg_derivative_conformal_H_fR];
+  //conformal_Hubble_parameter = ppw->pvecback[pba->index_bg_conformal_H_fR];
+  //derivative_conformal_Hubble_parameter = ppw->pvecback[pba->index_bg_derivative_conformal_H_fR];
   F_MG = ppw->pvecback[pba->index_bg_F_fR];
-  F_MG_prime = ppw->pvecback[pba->index_bg_Fprime_fR];
+  //F_MG_prime = ppw->pvecback[pba->index_bg_Fprime_fR];
   F_MG_double_prime = ppw->pvecback[pba->index_bg_Fdoubleprime_fR];
   FR = ppw->pvecback[pba->index_bg_FR_fR];
-  FR_prime = ppw->pvecback[pba->index_bg_FRprime_fR];
-  FR_double_prime = ppw->pvecback[pba->index_bg_FRdoubleprime_fR];
+  //FR_prime = ppw->pvecback[pba->index_bg_FRprime_fR];
+  //FR_double_prime = ppw->pvecback[pba->index_bg_FRdoubleprime_fR];
 
   /** Compute 'generalised cotK function of argument sqrt(|K|)*tau, for closing hierarchy.
       (see equation 2.34 in arXiv:1305.3261): */
@@ -6087,16 +6096,24 @@ int perturb_derivs(double tau,
       if (pba->has_fR == _TRUE_)
 	{
 	  
-	  DE_pressure_perturbation_fR = 2.*k2*FR/(3.*a2*pow(F_MG,2) + 9.*k2*FR*F_MG ) + 
+	  DE_pressure_perturbation_fR = (2.*k2*FR/a2/F_MG + 
+					 3.*(1. + 5.*k2*FR/a2/F_MG)*F_MG_double_prime/k2)/
+	    ( 1. + 3.*k2*FR/a2/F_MG )/3./F_MG;
+
+	  /*2.*k2*FR/(3.*a2*pow(F_MG,2) + 9.*k2*FR*F_MG ) + 
 
 	  ((a*pow(conformal_Hubble_parameter,2) + a2*conformal_Hubble_parameter*derivative_conformal_Hubble_parameter)*FR_prime + 
 	  a2*pow(conformal_Hubble_parameter,2)*FR_double_prime )/(a2*F_MG  + 3.*k2*FR) + 
 
 	  ( a*pow(conformal_Hubble_parameter,2)*F_MG_prime + a2*conformal_Hubble_parameter*
-	  derivative_conformal_Hubble_parameter*F_MG_prime + a2*pow(conformal_Hubble_parameter,2)*F_MG_double_prime)/(F_MG*k2 + 3.*pow(k2,2)*FR/a2  );
+	  derivative_conformal_Hubble_parameter*F_MG_prime + a2*pow(conformal_Hubble_parameter,2)*F_MG_double_prime)/(F_MG*k2 + 3.*pow(k2,2)*FR/a2  ); */
 
-	  DE_anisotropic_stress_fR = k2*FR/(a2*pow(F_MG,2) + 3.*k2*FR*F_MG )*(ppw->pvecback[pba->index_bg_rho_cdm] + 
-	  ppw->pvecback[pba->index_bg_rho_b])/ppw->pvecback[pba->index_bg_rho_fld]*(y[ppw->pv->index_pt_delta_cdm] + y[ppw->pv->index_pt_delta_b] );
+	  DE_anisotropic_stress_fR = k2*FR/a2/F_MG/(  1. + 3.*k2*FR/a2/F_MG )/F_MG*
+	    ppw->pvecback[pba->index_bg_rho_fld]*(y[ppw->pv->index_pt_delta_cdm] + y[ppw->pv->index_pt_delta_b] )/
+	    ppw->pvecback[pba->index_bg_rho_fld];
+
+	    /*k2*FR/(a2*pow(F_MG,2) + 3.*k2*FR*F_MG )*(ppw->pvecback[pba->index_bg_rho_cdm] + 
+	      ppw->pvecback[pba->index_bg_rho_b])/ppw->pvecback[pba->index_bg_rho_fld]*(y[ppw->pv->index_pt_delta_cdm] + y[ppw->pv->index_pt_delta_b] ); */
 
 	  pi_fld = DE_anisotropic_stress_fR;
 

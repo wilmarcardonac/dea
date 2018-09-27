@@ -51,6 +51,10 @@ CCFLAG += -D__CLASSDIR__='"$(MDIR)"'
 
 # where to find include files *.h
 INCLUDES = -I../include
+INCLUDES += -I/usr/local/include ##WC
+LDFLAG += /usr/local/lib -lgsl -lgslcblas
+#LIBDIR = /usr/local/lib              ##WC  
+#LIB_FL = -L$(LIBDIR) -lgsl -lgslcblas -lm  ##WC
 
 # automatically add external programs if needed. First, initialize to blank.
 EXTERNAL =
@@ -65,7 +69,7 @@ EXTERNAL += hyrectools.o helium.o hydrogen.o history.o
 endif
 
 %.o:  %.c .base
-	cd $(WRKDIR);$(CC) $(OPTFLAG) $(OMPFLAG) $(CCFLAG) $(INCLUDES) -c ../$< -o $*.o
+	cd $(WRKDIR);$(CC) $(OPTFLAG) $(OMPFLAG) $(CCFLAG) $(INCLUDES) -c ../$< -o $*.o 
 
 TOOLS = growTable.o dei_rkck.o sparse.o evolver_rkck.o  evolver_ndf15.o arrays.o parser.o quadrature.o hyperspherical.o common.o
 
@@ -133,7 +137,7 @@ libclass.a: $(TOOLS) $(SOURCE) $(EXTERNAL)
 	$(AR)  $@ $(addprefix build/, $(TOOLS) $(SOURCE) $(EXTERNAL))
 
 class: $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(CLASS)
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o class $(addprefix build/,$(notdir $^)) -lm
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o class $(addprefix build/,$(notdir $^)) -lm 
 
 test_sigma: $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(TEST_SIGMA)
 	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_sigma $(addprefix build/,$(notdir $^)) -lm

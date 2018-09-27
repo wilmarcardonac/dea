@@ -24,6 +24,44 @@ Contains
 
     End if
 
+    inquire(file='./figures',exist=dir_exist)
+
+    If (dir_exist) then
+
+       inquire(file='./figures/background',exist=dir_exist)
+
+       If (dir_exist) then
+
+          continue
+
+       Else
+
+          call system('mkdir figures/background')
+
+       End if
+
+       inquire(file='./figures/perturbations',exist=dir_exist)
+
+       If (dir_exist) then
+
+          continue
+
+       Else
+
+          call system('mkdir figures/perturbations')
+
+       End if
+
+    Else
+
+       call system('mkdir figures')
+
+       call system('mkdir figures/background')
+
+       call system('mkdir figures/perturbations')
+
+    End if
+
     open(UNIT_EXE_FILE,file=Execution_information)
 
     open(UNIT_OUTPUT_FILE,file=NUMERICAL_SOLUTION)
@@ -60,7 +98,15 @@ Contains
 
     Else
 
-       write(UNIT_EXE_FILE,*) 'WAVENUMBER: ', wavenumber_k, ' Mpc^{-1}'
+       If (approach .eq. 'GI') then 
+
+          write(UNIT_EXE_FILE,*) 'DIMENSIONLESS WAVENUMBER IS: ', dimensionless_wavenumber_K
+
+       Else
+
+          write(UNIT_EXE_FILE,*) 'WAVENUMBER: ', wavenumber_k, ' Mpc^{-1}'
+
+       End if
 
     End if
 
@@ -74,13 +120,11 @@ Contains
 
           write(UNIT_EXE_FILE,*) 'THIS ANALYSIS ASSUMES GENERAL RELATIVITY AND DARK ENERGY IS MODELLED AS A FLUID: ' 
 
-          write(UNIT_OUTPUT_FILE,*) '# scale_factor        \delta_m             \delta_de             v_m        '//trim(' ')//&
-               'v_de '
+          write(UNIT_OUTPUT_FILE,*) '# scale_factor    \delta_m    \delta_de    V_m    V_de '
 
        Else if ( (dimension_system_ode .eq. 6) .and. (approach .eq. 'EF') ) then
 
-          write(UNIT_OUTPUT_FILE,*) '# scale_factor        \delta_m             \delta_de             v_m        '//trim(' ')//&
-               'v_de            \phi                 \psi'
+          write(UNIT_OUTPUT_FILE,*) '# scale_factor    \delta_m    \delta_de    V_m    V_de    \phi    \psi'
 
           write(UNIT_EXE_FILE,*) 'THIS ANALYSIS ASSUMES GENERAL RELATIVITY AND DARK ENERGY IS MODELLED AS A FLUID: ' 
 
@@ -152,28 +196,25 @@ Contains
 
        If ( (dimension_system_ode .eq. 6) .and. (approach .eq. 'EF') ) then
           
-          write(UNIT_OUTPUT_FILE,*) '# scale_factor        \delta_m             \delta_de             V_m        '//trim(' ')//&
-               'V_de            \phi                 \psi  \delta_m_prime'
+          write(UNIT_OUTPUT_FILE,*) '# scale_factor    \delta_m    \delta_de    V_m    V_de    \phi    \psi'
 
           write(UNIT_EXE_FILE,*) 'USING EFFECTIVE FLUID APPROACH'
 
-       Else if (dimension_system_ode .eq. 4) then
+       Else if ( (dimension_system_ode .eq. 5) .and. (approach .eq. 'GI') ) then
+
+          write(UNIT_OUTPUT_FILE,*) '# scale_factor    \Delta_m    \Delta_de    Theta_m    Theta_de    Z'
+
+          write(UNIT_EXE_FILE,*) 'USING EFFECTIVE FLUID APPROACH AND GAUGE INVARIANT FORMALISM'
+
+       Else if ( (dimension_system_ode .eq. 4) .and. (approach .eq. 'CHI') ) then
 
           write(UNIT_OUTPUT_FILE,*) '# scale_factor    \delta_m    V_m    \phi_+    \chi'
 
           write(UNIT_EXE_FILE,*) 'USING MODIFICATIONS TO GENERAL RELATIVITY WRITTEN IN TERMS OF \PHI_+ AND \CHI'
 
-          write(UNIT_EXE_FILE,*) 'DIMENSION OF THE SYSTEM OF DIFFERENTIAL EQUATIONS MUST BE 6:'
-
-          write(UNIT_EXE_FILE,*) '\delta_m, V_m, \delta_de, V_de, \Phi, \Psi'
-
-          write(UNIT_EXE_FILE,*) 'IN THE CURRENT IMPLEMENTATION'
-
-          stop
-
        Else
 
-          write(UNIT_EXE_FILE,*) 'DIMENSION OF THE SYSTEM OF DIFFERENTIAL EQUATIONS MUST BE 4 OR 6:'
+          write(UNIT_EXE_FILE,*) 'DIMENSION OF THE SYSTEM OF DIFFERENTIAL EQUATIONS MUST BE 4, 5 OR 6:'
 
           stop
 
@@ -193,8 +234,7 @@ Contains
 
        If ( (dimension_system_ode .eq. 6) .and. (approach .eq. 'EF') ) then
 
-          write(UNIT_OUTPUT_FILE,*) '# scale_factor        \delta_m             \delta_de             V_m        '//trim(' ')//&
-               'V_de            \phi                 \psi  \delta_m_prime'
+          write(UNIT_OUTPUT_FILE,*) '# scale_factor    \delta_m    \delta_de    V_m    V_de    \phi    \psi  '
 
           write(UNIT_EXE_FILE,*) 'USING EFFECTIVE FLUID APPROACH'
 
@@ -203,14 +243,6 @@ Contains
           write(UNIT_OUTPUT_FILE,*) '# scale_factor    \delta_m    V_m    \phi_+    \chi'
 
           write(UNIT_EXE_FILE,*) 'USING MODIFICATIONS TO GENERAL RELATIVITY WRITTEN IN TERMS OF \PHI_+ AND \CHI'
-
-          write(UNIT_EXE_FILE,*) 'DIMENSION OF THE SYSTEM OF DIFFERENTIAL EQUATIONS MUST BE 6:'
-
-          write(UNIT_EXE_FILE,*) '\delta_m, V_m, \delta_de, V_de, \Phi, \Psi'
-
-          write(UNIT_EXE_FILE,*) 'IN THE CURRENT IMPLEMENTATION'
-
-          stop
 
        Else
 

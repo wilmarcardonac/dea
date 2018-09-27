@@ -79,7 +79,7 @@
  */
 
 #include "background.h"
-
+#include <gsl/gsl_sf_hyperg.h>
 /**
  * Background quantities at given conformal time tau.
  *
@@ -735,7 +735,7 @@ int background_functions(
       if (pba->has_fR == _TRUE_)
 	{
 	  /* CONFORMAL HUBBLE PARAMETER */
-	  pvecback[pba->index_bg_conformal_H_fR] = a*pba->H0*pow(1 - Omega0_M - pba->Omega0_g + pba->Omega0_g*pow(a,-4) + Omega0_M*pow(a,-3) - 
+	  /*	  pvecback[pba->index_bg_conformal_H_fR] = a*pba->H0*pow(1 - Omega0_M - pba->Omega0_g + pba->Omega0_g*pow(a,-4) + Omega0_M*pow(a,-3) - 
      pow(a,5)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,3)*(8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 
         4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 
         25728*pba->Omega0_g*pow(a,6)*pow(Omega0_M,3)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 7452*pow(a,7)*pow(Omega0_M,4)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 
@@ -745,10 +745,10 @@ int background_functions(
         3072*pba->Omega0_g*pow(a,15)*pow(-1 + Omega0_M + pba->Omega0_g,5) - 9216*Omega0_M*pow(a,16)*pow(-1 + Omega0_M + pba->Omega0_g,5) - 1024*pow(a,19)*pow(-1 + Omega0_M + pba->Omega0_g,6))*
       pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*
       (-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 
-        12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5);
+      12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5); */
 
 	  /* DERIVATIVE CONFORMAL HUBBLE PARAMETER W.R.T SCALE FACTOR */
-	  pvecback[pba->index_bg_derivative_conformal_H_fR] = (a*pba->H0*(-4*pba->Omega0_g*pow(a,-5) - 3*Omega0_M*pow(a,-4) - 96*pow(a,7)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,4)*
+	  /*	  pvecback[pba->index_bg_derivative_conformal_H_fR] = (a*pba->H0*(-4*pba->Omega0_g*pow(a,-5) - 3*Omega0_M*pow(a,-4) - 96*pow(a,7)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,4)*
          (8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 
            37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 25728*pba->Omega0_g*pow(a,6)*pow(Omega0_M,3)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 
            7452*pow(a,7)*pow(Omega0_M,4)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 17856*pow(a,5)*pow(Omega0_M,2)*pow(pba->Omega0_g,2)*pow(-1 + Omega0_M + pba->Omega0_g,2) - 
@@ -798,10 +798,10 @@ int background_functions(
          3072*pba->Omega0_g*pow(a,15)*pow(-1 + Omega0_M + pba->Omega0_g,5) - 9216*Omega0_M*pow(a,16)*pow(-1 + Omega0_M + pba->Omega0_g,5) - 1024*pow(a,19)*pow(-1 + Omega0_M + pba->Omega0_g,6))*
        pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*
        (-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 
-	12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5);
+       12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5); */
 	  
 	  /* f(a) */
-	  pvecback[pba->index_bg_f_fR] = 6*(pow(pba->H0,2)*(1 - Omega0_M - pba->Omega0_g + pba->Omega0_g*pow(a,-4) + Omega0_M*pow(a,-3) - 
+	  /*	  pvecback[pba->index_bg_f_fR] = 6*(pow(pba->H0,2)*(1 - Omega0_M - pba->Omega0_g + pba->Omega0_g*pow(a,-4) + Omega0_M*pow(a,-3) - 
          pow(a,5)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,3)*(8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 
             4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 
             25728*pba->Omega0_g*pow(a,6)*pow(Omega0_M,3)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 7452*pow(a,7)*pow(Omega0_M,4)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 
@@ -953,10 +953,13 @@ int background_functions(
                   pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 
                  2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*(-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 
                     3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*
-			pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-1);
+		    pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-1); */
                             
 	  /* F */
-	  pvecback[pba->index_bg_F_fR] = 1 - (pba->b_pi*pow(1 - Omega0_M,2)*pow(pba->H0,4)*pow(pow(pba->H0,2)*(1 - Omega0_M - pba->Omega0_g + pba->Omega0_g*pow(a,-4) + Omega0_M*pow(a,-3) - 
+	  pvecback[pba->index_bg_F_fR] = 1. + pba->b_pi*0.85*pow(Omega0_M,-0.57)*pow(a,3.386);
+	  printf("Testing..%f\n",gsl_sf_hyperg_2f1(1.,1.,1.,0.5));
+	  exit(1);
+	    /*1 - (pba->b_pi*pow(1 - Omega0_M,2)*pow(pba->H0,4)*pow(pow(pba->H0,2)*(1 - Omega0_M - pba->Omega0_g + pba->Omega0_g*pow(a,-4) + Omega0_M*pow(a,-3) - 
            pow(a,5)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,3)*(8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 
               4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 
               25728*pba->Omega0_g*pow(a,6)*pow(Omega0_M,3)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 7452*pow(a,7)*pow(Omega0_M,4)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 
@@ -1114,10 +1117,10 @@ int background_functions(
                      *pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 
                    2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*(-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 
                       3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*
-                    pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-2))/2.;
+		      pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-2))/2.; */
 
 	  /* Fprime */
-	  pvecback[pba->index_bg_Fprime_fR] = -(pow(1 - Omega0_M,3)*pow(pba->b_pi,2)*pow(pba->H0,6)*(pow(pba->H0,2)*(-4*pba->Omega0_g*pow(a,-5) - 3*Omega0_M*pow(a,-4) - 
+	    /*	  pvecback[pba->index_bg_Fprime_fR] = -(pow(1 - Omega0_M,3)*pow(pba->b_pi,2)*pow(pba->H0,6)*(pow(pba->H0,2)*(-4*pba->Omega0_g*pow(a,-5) - 3*Omega0_M*pow(a,-4) - 
             96*pow(a,7)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,4)*(8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 
                4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 
                25728*pba->Omega0_g*pow(a,6)*pow(Omega0_M,3)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 7452*pow(a,7)*pow(Omega0_M,4)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 
@@ -2014,10 +2017,12 @@ int background_functions(
                   pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 
                  2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*(-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 
                     3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*
-                  pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-2);
+		    pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-2); */
 
 	  /* Fdoubleprime*/
-	  pvecback[pba->index_bg_Fdoubleprime_fR] = -(pba->b_pi*pow(pba->H0,4)*(-4*pba->b_pi*pow(1 - Omega0_M,3)*pow(pba->H0,2)*pow(pow(pba->H0,2)*
+
+
+	    /*	    pvecback[pba->index_bg_Fdoubleprime_fR] =   -(pba->b_pi*pow(pba->H0,4)*(-4*pba->b_pi*pow(1 - Omega0_M,3)*pow(pba->H0,2)*pow(pow(pba->H0,2)*
             (-4*pba->Omega0_g*pow(a,-5) - 3*Omega0_M*pow(a,-4) - 96*pow(a,7)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,4)*
                (8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 
                  37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 
@@ -6214,10 +6219,12 @@ int background_functions(
                          1024*pow(a,19)*pow(-1 + Omega0_M + pba->Omega0_g,6))*pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 
                       2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*(-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 
                          3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*
-                       pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-2)))/2.;
+			 pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-2)))/2.; */
 
 	  /* FR */
-	  pvecback[pba->index_bg_FR_fR] = (pba->b_pi*pow(1 - Omega0_M,2)*pow(pba->H0,4)*pow(pow(pba->H0,2)*(1 - Omega0_M - pba->Omega0_g + pba->Omega0_g*pow(a,-4) + Omega0_M*pow(a,-3) - 
+	    pvecback[pba->index_bg_FR_fR] = -0.319789*pba->b_pi*pow(a,6.386)/pow(Omega0_M,1.57);
+
+	    /*(pba->b_pi*pow(1 - Omega0_M,2)*pow(pba->H0,4)*pow(pow(pba->H0,2)*(1 - Omega0_M - pba->Omega0_g + pba->Omega0_g*pow(a,-4) + Omega0_M*pow(a,-3) - 
           pow(a,5)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,3)*(8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 
              4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 
              25728*pba->Omega0_g*pow(a,6)*pow(Omega0_M,3)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 7452*pow(a,7)*pow(Omega0_M,4)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 
@@ -6370,10 +6377,10 @@ int background_functions(
                    pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 
                   2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*(-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 
                      3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*
-                   pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-3))/6.;
+		     pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-3))/6.; */
 
 	  /* FRprime */
-	  pvecback[pba->index_bg_FRprime_fR] = (pow(1 - Omega0_M,3)*pow(pba->b_pi,2)*pow(pba->H0,6)*(pow(pba->H0,2)*(-4*pba->Omega0_g*pow(a,-5) - 3*Omega0_M*pow(a,-4) - 
+	    /*	  pvecback[pba->index_bg_FRprime_fR] = (pow(1 - Omega0_M,3)*pow(pba->b_pi,2)*pow(pba->H0,6)*(pow(pba->H0,2)*(-4*pba->Omega0_g*pow(a,-5) - 3*Omega0_M*pow(a,-4) - 
            96*pow(a,7)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,4)*(8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 
               4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 
               25728*pba->Omega0_g*pow(a,6)*pow(Omega0_M,3)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 7452*pow(a,7)*pow(Omega0_M,4)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 
@@ -7284,10 +7291,10 @@ int background_functions(
                      *pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 
                    2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*(-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 
                       3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*
-                    pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-3))/2.;
+		      pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-3))/2.; */
 
 	  /* FRdoubleprime */ 
-	  pvecback[pba->index_bg_FRdoubleprime_fR] = (pba->b_pi*pow(pba->H0,4)*(-9*pba->b_pi*pow(1 - Omega0_M,3)*pow(pba->H0,2)*pow(pow(pba->H0,2)*
+	    /*	  pvecback[pba->index_bg_FRdoubleprime_fR] = (pba->b_pi*pow(pba->H0,4)*(-9*pba->b_pi*pow(1 - Omega0_M,3)*pow(pba->H0,2)*pow(pow(pba->H0,2)*
            (-4*pba->Omega0_g*pow(a,-5) - 3*Omega0_M*pow(a,-4) - 96*pow(a,7)*pow(pba->b_pi,2)*pow(-1 + Omega0_M + pba->Omega0_g,4)*
               (8692*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,4) - 40*pba->Omega0_g*pow(Omega0_M,5) + 4656*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,5) - 
                 37*a*pow(Omega0_M,6) + 4032*(-1 + Omega0_M + pba->Omega0_g)*pow(a,2)*pow(Omega0_M,3)*pow(pba->Omega0_g,2) + 
@@ -11446,10 +11453,11 @@ int background_functions(
                         1024*pow(a,19)*pow(-1 + Omega0_M + pba->Omega0_g,6))*pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-8) + 
                      2*pba->b_pi*pow(a,2)*pow(-1 + Omega0_M + pba->Omega0_g,2)*(-7*Omega0_M*pba->Omega0_g + 4*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) + 
                         3*Omega0_M*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4) - 6*a*pow(Omega0_M,2) + 12*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*
-                      pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-3)))/6.;
+			pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-3),0.5)),-1))/2.,-3)))/6.; */
 
 	  /* w(a) */
-	  pvecback[pba->index_bg_w_fR] = -1 - (4*(-1 + Omega0_M)*pba->b_pi*pow(a,2)*(-88*Omega0_M*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) - 7*pba->Omega0_g*pow(Omega0_M,2) - 63*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,2) - 
+	    pvecback[pba->index_bg_w_fR] = -1.;
+	    /*-1 - (4*(-1 + Omega0_M)*pba->b_pi*pow(a,2)*(-88*Omega0_M*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3) - 7*pba->Omega0_g*pow(Omega0_M,2) - 63*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,2) - 
         9*a*pow(Omega0_M,3) + 32*pba->Omega0_g*pow(a,6)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 72*Omega0_M*pow(a,7)*pow(-1 + Omega0_M + pba->Omega0_g,2))*
       pow(Omega0_M - 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-4))/3. - (2*(-1 + Omega0_M)*pow(a,4)*pow(pba->b_pi,2)*
       (520*a*(-1 + Omega0_M)*pba->Omega0_g*pow(Omega0_M,6) + 327*(-1 + Omega0_M)*pow(a,2)*pow(Omega0_M,7) + 196*(-1 + Omega0_M)*pow(Omega0_M,5)*pow(pba->Omega0_g,2) - 
@@ -11468,10 +11476,12 @@ int background_functions(
         2048*Omega0_M*pba->Omega0_g*(-26 + 26*Omega0_M + 77*pba->Omega0_g)*pow(a,16)*pow(-1 + Omega0_M + pba->Omega0_g,5) - 
         2304*(-104 + 104*Omega0_M + 153*pba->Omega0_g)*pow(a,17)*pow(Omega0_M,2)*pow(-1 + Omega0_M + pba->Omega0_g,5) + 
         8192*(-1 + Omega0_M)*pow(a,15)*pow(pba->Omega0_g,2)*pow(-1 + Omega0_M + pba->Omega0_g,5) + 8192*pba->Omega0_g*(-6 + 6*Omega0_M + 7*pba->Omega0_g)*pow(a,19)*pow(-1 + Omega0_M + pba->Omega0_g,6) + 
-        6144*Omega0_M*(-20 + 20*Omega0_M + 27*pba->Omega0_g)*pow(a,20)*pow(-1 + Omega0_M + pba->Omega0_g,6))*pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-9))/3.;
+        6144*Omega0_M*(-20 + 20*Omega0_M + 27*pba->Omega0_g)*pow(a,20)*pow(-1 + Omega0_M + pba->Omega0_g,6))*pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-9))/3.; */
 
 	  /* w_prime(a) */
-	  pvecback[pba->index_bg_w_prime_fR] = (2*(-1 + Omega0_M)*pow(a,3)*pow(pba->b_pi,2)*(4*a*(280*(-1 + Omega0_M)*pba->Omega0_g*pow(Omega0_M,7) + 333*a*(-1 + Omega0_M)*pow(Omega0_M,8) - 
+	    pvecback[pba->index_bg_w_prime_fR] = 0.;
+
+	    /*(2*(-1 + Omega0_M)*pow(a,3)*pow(pba->b_pi,2)*(4*a*(280*(-1 + Omega0_M)*pba->Omega0_g*pow(Omega0_M,7) + 333*a*(-1 + Omega0_M)*pow(Omega0_M,8) - 
            48*pow(a,4)*pow(Omega0_M,7)*(1471 - 2857*pba->Omega0_g + Omega0_M*(-2942 + 2857*pba->Omega0_g) + 1471*pow(Omega0_M,2) + 1386*pow(pba->Omega0_g,2)) - 
            5*pba->Omega0_g*pow(a,3)*pow(Omega0_M,6)*(22623 - 44722*pba->Omega0_g + Omega0_M*(-45246 + 44722*pba->Omega0_g) + 22623*pow(Omega0_M,2) + 22099*pow(pba->Omega0_g,2)) - 
            24*pba->Omega0_g*(-87947 + 87947*Omega0_M + 87871*pba->Omega0_g)*pow(a,6)*pow(Omega0_M,5)*pow(-1 + Omega0_M + pba->Omega0_g,2) - 
@@ -11552,7 +11562,7 @@ int background_functions(
          pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-9)))/3. + (4*a*(-1 + Omega0_M)*pba->b_pi*
       (-720*pba->Omega0_g*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3)*pow(Omega0_M,2) - 14*pba->Omega0_g*pow(Omega0_M,3) - 702*(-1 + Omega0_M + pba->Omega0_g)*pow(a,4)*pow(Omega0_M,3) - 27*a*pow(Omega0_M,4) - 
         2208*Omega0_M*pba->Omega0_g*pow(a,6)*pow(-1 + Omega0_M + pba->Omega0_g,2) - 864*pow(a,7)*pow(Omega0_M,2)*pow(-1 + Omega0_M + pba->Omega0_g,2) + 
-        512*pba->Omega0_g*pow(a,9)*pow(-1 + Omega0_M + pba->Omega0_g,3) + 864*Omega0_M*pow(a,10)*pow(-1 + Omega0_M + pba->Omega0_g,3))*pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-5))/3.;
+        512*pba->Omega0_g*pow(a,9)*pow(-1 + Omega0_M + pba->Omega0_g,3) + 864*Omega0_M*pow(a,10)*pow(-1 + Omega0_M + pba->Omega0_g,3))*pow(-Omega0_M + 4*(-1 + Omega0_M + pba->Omega0_g)*pow(a,3),-5))/3.; */
 
 	  /*	  printf("CURRENT SCALE FACTOR IS = %10e\n",a_rel);
 	  printf("f(R) PARAMETER IS = %10e\n",pba->b_pi);
@@ -11572,11 +11582,13 @@ int background_functions(
 	  printf("DERIVATIVE EQUATION OF STATE IS = %10e\n",pvecback[pba->index_bg_w_prime_fR]);
 	  exit(-1); */
 
-	  pvecback[pba->index_bg_rho_fld] = -pvecback[pba->index_bg_f_fR]/6. + pow(pvecback[pba->index_bg_conformal_H_fR],2)/pow(a,2) -
+	    pvecback[pba->index_bg_rho_fld] = pba->Omega0_fld * pow(pba->H0,2);
+
+	    /*-pvecback[pba->index_bg_f_fR]/6. + pow(pvecback[pba->index_bg_conformal_H_fR],2)/pow(a,2) -
 	    pow(pvecback[pba->index_bg_conformal_H_fR],2)*pvecback[pba->index_bg_Fprime_fR]/a + 
-	    pvecback[pba->index_bg_F_fR]*pvecback[pba->index_bg_conformal_H_fR]*pvecback[pba->index_bg_derivative_conformal_H_fR]/a;
-	  rho_tot += pvecback[pba->index_bg_rho_fld];
-	  p_tot +=  pvecback[pba->index_bg_w_fR]*pvecback[pba->index_bg_rho_fld];
+	    pvecback[pba->index_bg_F_fR]*pvecback[pba->index_bg_conformal_H_fR]*pvecback[pba->index_bg_derivative_conformal_H_fR]/a; */
+	    rho_tot += pvecback[pba->index_bg_rho_fld];
+	    p_tot +=  pvecback[pba->index_bg_w_fR]*pvecback[pba->index_bg_rho_fld];
 	  
 	}
       else   /* fluid with w=w0+wa(1-a/a0) and constant cs2 */
@@ -11605,6 +11617,12 @@ int background_functions(
 
   /** - compute derivative of H with respect to conformal time */
   pvecback[pba->index_bg_H_prime] = - (3./2.) * (rho_tot + p_tot) * a + pba->K/a;
+
+  if (pba->has_fR == _TRUE_) 
+    {
+      pvecback[pba->index_bg_Fdoubleprime_fR] = pow(a,2)*pvecback[pba->index_bg_H]*pba->b_pi*( pow(a,2)*pvecback[pba->index_bg_H]*6.86715*pow(a,1.386)/pow(Omega0_M,0.57) + 
+      (2.*a*pvecback[pba->index_bg_H] + pvecback[pba->index_bg_H_prime]/pvecback[pba->index_bg_H])*2.8781*pow(a,2.386)/pow(Omega0_M,0.57)    );  
+    }
 
   /** - compute relativistic density to total density ratio */
   pvecback[pba->index_bg_Omega_r] = rho_r / rho_tot;

@@ -3,7 +3,7 @@ mpl.use('Agg')
 import numpy as np
 import matplotlib.pyplot as py
 
-a,H,H_prime,H_double_prime,ricci_scalar,ricci_scalar_prime,fMG,fMG_R,fMG_R_prime,fMG_R_double_prime,DE_density,w_DE,fMG_RR,fMG_RR_prime,fMG_RR_double_prime,Omega_M,Omega_DE,Omega_DE_prime = np.loadtxt('../output/background_functions.txt',unpack=True,usecols=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17])
+a,H,H_prime,H_double_prime,ricci_scalar,ricci_scalar_prime,fMG,fMG_R,fMG_R_prime,fMG_R_double_prime,DE_density,w_DE,fMG_RR,fMG_RR_prime,fMG_RR_double_prime,Omega_M,Omega_DE,Omega_DE_prime,denominator,H_triple_prime = np.loadtxt('../output/background_functions.txt',unpack=True,usecols=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19])
 
 # H
 
@@ -50,6 +50,22 @@ py.xlabel(r'$a$',fontsize='large')
 py.legend(labels_H_double_prime,loc=0)
 
 py.savefig('./background/second_derivative_conformal_Hubble_parameter.pdf')
+
+py.close()
+
+# H triple prime
+
+fig = py.figure()
+
+labels_H_triple_prime = (r'$|Htripleprime(a)|$')
+
+py.loglog(a,abs(H_triple_prime),color='red')
+
+py.xlabel(r'$a$',fontsize='large')
+
+py.legend(labels_H_triple_prime,loc=0)
+
+py.savefig('./background/third_derivative_conformal_Hubble_parameter.pdf')
 
 py.close()
 
@@ -261,19 +277,19 @@ py.savefig('./background/Omega_DE.pdf')
 
 py.close()
 
-# Omega_DE_prime(a)
+# denominator cs2(a)
 
 fig = py.figure()
 
-labels_Omega_DE_prime = (r'$|\Omega_DE_prime(a)|$')
+labels_denominator = (r'$|denominator(a)|$')
 
-py.loglog(a,abs(Omega_DE_prime),color='red')
+py.loglog(a,abs(denominator),color='red')
 
 py.xlabel(r'$a$',fontsize='large')
 
-py.legend(labels_Omega_DE_prime,loc=0)
+py.legend(labels_denominator,loc=0)
 
-py.savefig('./background/Omega_DE_prime.pdf')
+py.savefig('./background/denominator_cs2.pdf')
 
 py.close()
 

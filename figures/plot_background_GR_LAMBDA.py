@@ -101,54 +101,6 @@ py.savefig('./background/fMG.pdf')
 
 py.close()
 
-# f_R(R(a))
-
-fig = py.figure()
-
-labels_fMG_R = (r'$|f_R(R(a))|$')
-
-py.loglog(a,abs(fMG_R),color='red')
-
-py.xlabel(r'$a$',fontsize='large')
-
-py.legend(labels_fMG_R,loc=0)
-
-py.savefig('./background/fMG_R.pdf')
-
-py.close()
-
-# f_R_prime(R(a))
-
-fig = py.figure()
-
-labels_fMG_R_prime = (r'$|f_R_prime(R(a))|$')
-
-py.loglog(a,abs(fMG_R_prime),color='red')
-
-py.xlabel(r'$a$',fontsize='large')
-
-py.legend(labels_fMG_R_prime,loc=0)
-
-py.savefig('./background/fMG_R_prime.pdf')
-
-py.close()
-
-# f_R_double_prime(R(a))
-
-fig = py.figure()
-
-labels_fMG_R_double_prime = (r'$|f_R_double_prime(R(a))|$')
-
-py.loglog(a,abs(fMG_R_double_prime),color='red')
-
-py.xlabel(r'$a$',fontsize='large')
-
-py.legend(labels_fMG_R_double_prime,loc=0)
-
-py.savefig('./background/fMG_R_double_prime.pdf')
-
-py.close()
-
 # DE_density(a) times kappa 
 
 fig = py.figure()
@@ -181,54 +133,6 @@ py.savefig('./background/w_DE.pdf')
 
 py.close()
 
-# f_RR(R(a))
-
-fig = py.figure()
-
-labels_fMG_RR = (r'$|f_RR(R(a))|$')
-
-py.loglog(a,abs(fMG_RR),color='red')
-
-py.xlabel(r'$a$',fontsize='large')
-
-py.legend(labels_fMG_RR,loc=0)
-
-py.savefig('./background/fMG_RR.pdf')
-
-py.close()
-
-# f_RR_prime(R(a))
-
-fig = py.figure()
-
-labels_fMG_RR_prime = (r'$|f_RR_prime(R(a))|$')
-
-py.loglog(a,abs(fMG_RR_prime),color='red')
-
-py.xlabel(r'$a$',fontsize='large')
-
-py.legend(labels_fMG_RR_prime,loc=0)
-
-py.savefig('./background/fMG_RR_prime.pdf')
-
-py.close()
-
-# f_RR_double_prime(R(a))
-
-fig = py.figure()
-
-labels_fMG_RR_double_prime = (r'$|f_RR_double_prime(R(a))|$')
-
-py.loglog(a,abs(fMG_RR_double_prime),color='red')
-
-py.xlabel(r'$a$',fontsize='large')
-
-py.legend(labels_fMG_RR_double_prime,loc=0)
-
-py.savefig('./background/fMG_RR_double_prime.pdf')
-
-py.close()
-
 # Omega_M(a)
 
 fig = py.figure()
@@ -258,22 +162,6 @@ py.xlabel(r'$a$',fontsize='large')
 py.legend(labels_Omega_DE,loc=0)
 
 py.savefig('./background/Omega_DE.pdf')
-
-py.close()
-
-# Omega_DE_prime(a)
-
-fig = py.figure()
-
-labels_Omega_DE_prime = (r'$|\Omega_DE_prime(a)|$')
-
-py.loglog(a,abs(Omega_DE_prime),color='red')
-
-py.xlabel(r'$a$',fontsize='large')
-
-py.legend(labels_Omega_DE_prime,loc=0)
-
-py.savefig('./background/Omega_DE_prime.pdf')
 
 py.close()
 

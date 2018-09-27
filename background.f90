@@ -8,7 +8,9 @@ Module background
 
 Contains
 
-  ! CONFORMAL HUBBLE PARAMETER
+  !##################################
+  ! CONFORMAL HUBBLE PARAMETER STARTS
+  !##################################
 
   function conformal_Hubble_parameter(a)
 
@@ -16,6 +18,7 @@ Contains
 
     Real*8 :: a,conformal_Hubble_parameter
 
+    
     If (MG_parametrisation .eq. 'GR_DE') then
 
        conformal_Hubble_parameter = H0*Sqrt(Omega_m/a + (1.d0 - Omega_m)*a**(-1.d0 - 3.d0*w0_fld))
@@ -46,7 +49,13 @@ Contains
 
   end function conformal_Hubble_parameter
 
-  ! DERIVATIVE OF THE CONFORMAL HUBBLE PARAMETER 
+  !################################
+  ! CONFORMAL HUBBLE PARAMETER ENDS
+  !################################
+
+  !####################################################
+  ! DERIVATIVE OF THE CONFORMAL HUBBLE PARAMETER STARTS
+  !#################################################### 
 
   function derivative_conformal_Hubble_parameter(a) 
 
@@ -100,7 +109,7 @@ Contains
 
        derivative_conformal_Hubble_parameter = -(H0**2*(Omega_m - 2.d0*(1.d0 - Omega_m)*a**(3.d0)&
             ))/(2.d0*a**2*conformal_Hubble_parameter(a))
-       
+
     Else
 
        derivative_conformal_Hubble_parameter = -1.d10
@@ -109,7 +118,13 @@ Contains
 
   end function derivative_conformal_Hubble_parameter
 
-  ! SECOND DERIVATIVE OF THE CONFORMAL HUBBLE PARAMETER 
+  !##################################################
+  ! DERIVATIVE OF THE CONFORMAL HUBBLE PARAMETER ENDS
+  !################################################## 
+
+  !###########################################################
+  ! SECOND DERIVATIVE OF THE CONFORMAL HUBBLE PARAMETER STARTS
+  !###########################################################
 
   function second_derivative_conformal_Hubble_parameter(a) 
 
@@ -124,7 +139,7 @@ Contains
             (-1.d0 + Omega_m)**2*(1.d0 + w0_fld)*(1.d0 + 3.d0*w0_fld) - 2.d0*a**(3.d0*w0_fld)*(-1.d0 &
             + Omega_m)*Omega_m*(1.d0 + w0_fld*(2.d0 + 3.d0*w0_fld))))/(4.d0*a**2*(1.d0 + &
             (-1.d0 + a**(3.d0*w0_fld))*Omega_m)**2)
-    
+
     Else if (MG_parametrisation .eq. 'HS_Basilakos') then
 
        second_derivative_conformal_Hubble_parameter = (H0*((-3*Omega_m)/a**4 + (6*a**3*b_fR*(-1 + &
@@ -232,7 +247,112 @@ Contains
 
   end function second_derivative_conformal_Hubble_parameter
 
-  ! RICCI SCALAR 
+  !#########################################################
+  ! SECOND DERIVATIVE OF THE CONFORMAL HUBBLE PARAMETER ENDS
+  !#########################################################
+
+
+  !###########################################################
+  ! THIRD DERIVATIVE OF THE CONFORMAL HUBBLE PARAMETER STARTS
+  !###########################################################
+
+  function third_derivative_conformal_Hubble_parameter(a) 
+
+    Implicit none 
+
+    Real*8 :: a,third_derivative_conformal_Hubble_parameter
+
+    If (MG_parametrisation .eq. 'GR_DE') then
+
+       third_derivative_conformal_Hubble_parameter = 0.d0 
+
+    Else if (MG_parametrisation .eq. 'HS_Basilakos') then
+
+       third_derivative_conformal_Hubble_parameter = 0.d0
+
+    Else if (MG_parametrisation .eq. 'Starobinsky_Basilakos') then
+
+       third_derivative_conformal_Hubble_parameter = 0.d0
+
+    Else if ( (MG_parametrisation .eq. 'Savvas') .or. (MG_parametrisation .eq. 'GR_LAMBDA') ) then
+
+       third_derivative_conformal_Hubble_parameter = (3*H0*Omega_m*(-32*a**6*(-1 + Omega_m)**2 + &
+            10*a**3*(-1 + Omega_m)*Omega_m - 5*Omega_m**2))/(8.*a**6*((a**3 + Omega_m - &
+            a**3*Omega_m)/a)**2.5)
+
+    Else
+
+       third_derivative_conformal_Hubble_parameter = 0.d0
+
+    End if
+
+  end function third_derivative_conformal_Hubble_parameter
+
+  !#########################################################
+  ! THIRD DERIVATIVE OF THE CONFORMAL HUBBLE PARAMETER ENDS
+  !#########################################################
+
+  !##########################
+  ! Eq. (3.10) BATTYE'S PAPER
+  !##########################
+
+  function g_K(a)
+
+    Implicit none
+
+    Real*8 :: a,g_K,K
+
+    K = wavenumber_k/conformal_Hubble_parameter(a)
+
+    g_K = 1.d0 + K**2/3.d0/E_H(a)
+
+  End function g_K
+  
+  !##########################
+  ! Eq. (2.4) BATTYE'S PAPER
+  !##########################
+
+  function E_H(a)
+
+    Implicit none
+
+    Real*8 :: a,E_H
+
+    E_H = 1.d0 -a*derivative_conformal_Hubble_parameter(a)/conformal_Hubble_parameter(a)
+
+  End function E_H
+
+  !###########################
+  ! Eq. (4.12a) BATTYE'S PAPER
+  !###########################
+
+  function Zeta_de(a)
+
+    Implicit none
+
+    Real*8 :: a,Zeta_de
+
+    Zeta_de = (4.d0*g_K(a) - 1.d0)/3.d0/g_K(a) 
+
+  End function Zeta_de
+
+  !###########################
+  ! Eq. (4.12b) BATTYE'S PAPER
+  !###########################
+
+  function Zeta_m(a)
+
+    Implicit none
+
+    Real*8 :: a,Zeta_m
+
+    Zeta_m = (g_K(a) - 1.d0)/3.d0/g_K(a) 
+
+  End function Zeta_m
+
+  !####################
+  ! RICCI SCALAR STARTS
+  !####################
 
   function ricci_scalar(a)
 
@@ -258,7 +378,13 @@ Contains
 
   end function ricci_scalar_fgsl
 
-  ! DERIVATIVE OF THE RICCI SCALAR
+  !##################
+  ! RICCI SCALAR ENDS
+  !##################
+
+  !######################################
+  ! DERIVATIVE OF THE RICCI SCALAR STARTS
+  !######################################
 
   function ricci_scalar_prime(a)
 
@@ -276,32 +402,29 @@ Contains
 
   end function ricci_scalar_prime
 
-  ! f(R(a))
+  !####################################
+  ! DERIVATIVE OF THE RICCI SCALAR ENDS
+  !####################################
+
+  !###############
+  ! f(R(a)) STARTS
+  !###############
 
   function fMG(a)
 
     Implicit none
 
-    Real*8 :: fMG,a,R,x,y,R0,x0,y0
+    Real*8 :: fMG,a,R,x,y
     Real*8,parameter :: b2 = (-7.d0+sqrt(73.d0))/12.d0
     Real*8,parameter :: a2 = 1.d0 + b2
     Real*8,parameter :: b = 1.5d0 + b2
     Real*8,parameter :: c = 13.d0/6.d0 + 2.d0*b2
-    Real*8 :: alpha   ! PARAMETER IN THE f(R) PARAMETRISATION BY SAVVAS. 
 
     R = ricci_scalar(a)
 
-    R0 = ricci_scalar(1.d0)
-
     x = Lambda/(R-3.d0*Lambda)
 
-    x0 = Lambda/(R0-3.d0*Lambda)
-
     y = R/(R-3.d0*Lambda)
-
-    y0 = R0/(R0-3.d0*Lambda)
-
-    alpha = -fR0/(b2*H0**2/R0*y0**a2*(Lambda/R0)**b2*fgsl_sf_hyperg_2f1(a2,b,c,x0)) 
 
     If (MG_parametrisation .eq. 'GR_DE') then
 
@@ -331,32 +454,29 @@ Contains
 
   end function fMG
 
-  ! f_R(R(a))
+  !#############
+  ! f(R(a)) ENDS
+  !#############
+
+  !#################
+  ! f_R(R(a)) STARTS
+  !#################
 
   function fMG_R(a)
 
     Implicit none
 
-    Real*8 :: fMG_R,a,R,x,y,R0,x0,y0
+    Real*8 :: fMG_R,a,R,x,y
     Real*8,parameter :: b2 = (-7.d0+sqrt(73.d0))/12.d0
     Real*8,parameter :: a2 = 1.d0 + b2
     Real*8,parameter :: b = 1.5d0 + b2
     Real*8,parameter :: c = 13.d0/6.d0 + 2.d0*b2
-    Real*8 :: alpha   ! PARAMETER IN THE f(R) PARAMETRISATION BY SAVVAS. 
 
     R = ricci_scalar(a)
 
-    R0 = ricci_scalar(1.d0)
-
     x = Lambda/(R-3.d0*Lambda)
 
-    x0 = Lambda/(R0-3.d0*Lambda)
-
     y = R/(R-3.d0*Lambda)
-
-    y0 = R0/(R0-3.d0*Lambda)
-
-    alpha = -fR0/(b2*H0**2/R0*y0**a2*(Lambda/R0)**b2*fgsl_sf_hyperg_2f1(a2,b,c,x0)) 
 
     If (MG_parametrisation .eq. 'GR_DE') then
 
@@ -386,35 +506,32 @@ Contains
 
   end function fMG_R
 
-  ! f_R_prime(R(a))
+  !###############
+  ! f_R(R(a)) ENDS
+  !###############
+
+  !#######################
+  ! f_R_prime(R(a)) STARTS
+  !#######################
 
   function fMG_R_prime(a)
 
     Implicit none
 
-    Real*8 :: fMG_R_prime,a,R,x,y,R0,x0,y0,R_prime
+    Real*8 :: fMG_R_prime,a,R,x,y,R_prime
     Real*8,parameter :: b2 = (-7.d0+sqrt(73.d0))/12.d0
     Real*8,parameter :: a2 = 1.d0 + b2
     Real*8,parameter :: a3 = 2.d0 + b2
     Real*8,parameter :: b = 1.5d0 + b2
     Real*8,parameter :: c = 13.d0/6.d0 + 2.d0*b2
-    Real*8 :: alpha   ! PARAMETER IN THE f(R) PARAMETRISATION BY SAVVAS. 
 
     R = ricci_scalar(a)
-
-    R0 = ricci_scalar(1.d0)
 
     R_prime = ricci_scalar_prime(a)
 
     x = Lambda/(R-3.d0*Lambda)
 
-    x0 = Lambda/(R0-3.d0*Lambda)
-
     y = R/(R-3.d0*Lambda)
-
-    y0 = R0/(R0-3.d0*Lambda)
-
-    alpha = -fR0/(b2*H0**2/R0*y0**a2*(Lambda/R0)**b2*fgsl_sf_hyperg_2f1(a2,b,c,x0)) 
 
     If (MG_parametrisation .eq. 'GR_DE') then
 
@@ -455,7 +572,13 @@ Contains
 
   end function fMG_R_prime_fgsl
 
-  ! f_R_double_prime(R(a))
+  !#####################
+  ! f_R_prime(R(a)) ENDS
+  !#####################
+
+  !##############################
+  ! f_R_double_prime(R(a)) STARTS
+  !##############################
 
   function fMG_R_double_prime(a)
 
@@ -466,39 +589,36 @@ Contains
 
     pwr = fgsl_function_init(fMG_R_prime_fgsl, c_null_ptr)
 
-    status = fgsl_deriv_central (pwr, a , 1.E-6_fgsl_double, &
+    status = fgsl_deriv_central (pwr, a , 1.E-8_fgsl_double, &
          result, abserr)
 
     fMG_R_double_prime = result
 
   end function fMG_R_double_prime
 
-  ! f_RR(R(a))
+  !############################
+  ! f_R_double_prime(R(a)) ENDS
+  !############################
+
+  !##################
+  ! f_RR(R(a)) STARTS
+  !##################
 
   function fMG_RR(a)
 
     Implicit none
 
-    Real*8 :: fMG_RR,a,R,x,y,R0,x0,y0
+    Real*8 :: fMG_RR,a,R,x,y
     Real*8,parameter :: b2 = (-7.d0+sqrt(73.d0))/12.d0
     Real*8,parameter :: a2 = 1.d0 + b2
     Real*8,parameter :: b = 1.5d0 + b2
     Real*8,parameter :: c = 13.d0/6.d0 + 2.d0*b2
-    Real*8 :: alpha   ! PARAMETER IN THE f(R) PARAMETRISATION BY SAVVAS. 
 
     R = ricci_scalar(a)
 
-    R0 = ricci_scalar(1.d0)
-
     x = Lambda/(R-3.d0*Lambda)
 
-    x0 = Lambda/(R0-3.d0*Lambda)
-
     y = R/(R-3.d0*Lambda)
-
-    y0 = R0/(R0-3.d0*Lambda)
-
-    alpha = -fR0/(b2*H0**2/R0*y0**a2*(Lambda/R0)**b2*fgsl_sf_hyperg_2f1(a2,b,c,x0)) 
 
     If (MG_parametrisation .eq. 'GR_DE') then
 
@@ -530,34 +650,31 @@ Contains
 
   end function fMG_RR
 
-  ! f_RR_prime(R(a))
+  !################
+  ! f_RR(R(a)) ENDS
+  !################
+
+  !########################
+  ! f_RR_prime(R(a)) STARTS
+  !########################
 
   function fMG_RR_prime(a)
 
     Implicit none
 
-    Real*8 :: fMG_RR_prime,a,R,x,y,R0,x0,y0,R_prime
+    Real*8 :: fMG_RR_prime,a,R,x,y,R_prime
     Real*8,parameter :: b2 = (-7.d0+sqrt(73.d0))/12.d0
     Real*8,parameter :: a2 = 1.d0 + b2
     Real*8,parameter :: b = 1.5d0 + b2
     Real*8,parameter :: c = 13.d0/6.d0 + 2.d0*b2
-    Real*8 :: alpha   ! PARAMETER IN THE f(R) PARAMETRISATION BY SAVVAS. 
 
     R = ricci_scalar(a)
-
-    R0 = ricci_scalar(1.d0)
 
     R_prime = ricci_scalar_prime(a)
 
     x = Lambda/(R-3.d0*Lambda)
 
-    x0 = Lambda/(R0-3.d0*Lambda)
-
     y = R/(R-3.d0*Lambda)
-
-    y0 = R0/(R0-3.d0*Lambda)
-
-    alpha = -fR0/(b2*H0**2/R0*y0**a2*(Lambda/R0)**b2*fgsl_sf_hyperg_2f1(a2,b,c,x0)) 
 
     If (MG_parametrisation .eq. 'GR_DE') then
 
@@ -592,6 +709,14 @@ Contains
 
   end function fMG_RR_prime
 
+  !######################
+  ! f_RR_prime(R(a)) ENDS
+  !######################
+
+  !###############################
+  ! f_RR_double_prime(R(a)) STARTS
+  !###############################
+
   function fMG_RR_double_prime(a)
 
     Implicit none
@@ -602,7 +727,13 @@ Contains
 
   end function fMG_RR_double_prime
 
-  ! DARK ENERGY DENSITY FOR AN EFFECTIVE FLUID FROM F(R) PARAMMETRISATION (IT INCLUDES COSMOLOGICAL CONSTANT)
+  !#############################
+  ! f_RR_double_prime(R(a)) ENDS
+  !#############################
+
+  !###########################
+  ! DARK ENERGY DENSITY STARTS 
+  !###########################
 
   function dark_energy_density(a) ! ACTUALLY THIS IS THE DARK ENERGY DENSITY MULTIPLIED BY \kappa
 
@@ -614,9 +745,13 @@ Contains
 
     H = conformal_Hubble_parameter(a) 
 
-    If (MG_parametrisation .eq. 'GR_DE') then
+    If ( (MG_parametrisation .eq. 'GR_DE') .or. (MG_parametrisation .eq. 'Savvas') ) then
 
        dark_energy_density = 3.d0*H0**2*(1.d0 - Omega_m)*a**(-3.d0 - 3.d0*equation_of_state(a))
+
+    Else if (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+       dark_energy_density = -fMG(a)/2.d0
 
     Else
 
@@ -627,7 +762,13 @@ Contains
 
   end function dark_energy_density
 
-  ! EQUATION OF STATE FOR AN EFFECTIVE FLUID FROM F(R) PARAMMETRISATION BY BASILAKOS ET AL.
+  !#########################
+  ! DARK ENERGY DENSITY ENDS 
+  !#########################
+
+  !#########################
+  ! EQUATION OF STATE STARTS
+  !#########################
 
   function equation_of_state(a)
 
@@ -645,6 +786,10 @@ Contains
 
        equation_of_state = w0_fld
 
+    Else if ((MG_parametrisation .eq. 'Savvas') .or. (MG_parametrisation .eq. 'GR_LAMBDA')) then
+
+       equation_of_state = -1.d0 
+
     Else
 
        equation_of_state = -1.d0/3.d0 -2.d0/3.d0*(H**2*fMG_R(a) - a**2*fMG(a)/6.d0 - H**2*a*fMG_R_prime(a) - &
@@ -655,7 +800,13 @@ Contains
 
   end function equation_of_state
 
-  ! DERIVATIVE DARK ENERGY DENSITY FOR AN EFFECTIVE FLUID FROM F(R) PARAMMETRISATION BY BASILAKOS ET AL.
+  !#######################
+  ! EQUATION OF STATE ENDS
+  !#######################
+
+  !######################################
+  ! DERIVATIVE DARK ENERGY DENSITY STARTS
+  !######################################
 
   function derivative_dark_energy_density(a)
 
@@ -678,6 +829,14 @@ Contains
     End if
 
   end function derivative_dark_energy_density
+
+  !####################################
+  ! DERIVATIVE DARK ENERGY DENSITY ENDS
+  !####################################
+
+  !###################################
+  !DERIVATIVE EQUATION OF STATE STARTS
+  !###################################
 
   function derivative_equation_of_state(a)
 
@@ -711,7 +870,13 @@ Contains
 
   end function derivative_equation_of_state
 
-  ! F = 1 + f_R 
+  !#################################
+  !DERIVATIVE EQUATION OF STATE ENDS
+  !#################################
+
+  !###################
+  ! F = 1 + f_R STARTS
+  !###################
 
   function F_MG(a)
 
@@ -723,7 +888,13 @@ Contains
 
   end function F_MG
 
-  ! F'
+  !#################
+  ! F = 1 + f_R ENDS
+  !#################
+
+  !##########
+  ! F' STARTS
+  !##########
 
   function F_MG_prime(a)
 
@@ -735,7 +906,13 @@ Contains
 
   end function F_MG_prime
 
-  !F''
+  !########
+  ! F' ENDS
+  !########
+
+  !##########
+  !F'' STARTS
+  !##########
 
   function F_MG_double_prime(a)
 
@@ -747,7 +924,13 @@ Contains
 
   end function F_MG_double_prime
 
-  ! F_R
+  !########
+  !F'' ENDS
+  !########
+
+  !###########
+  ! F_R STARTS
+  !###########
 
   function FR(a)
 
@@ -758,6 +941,14 @@ Contains
     FR = fMG_RR(a)
 
   end function FR
+
+  !#########
+  ! F_R ENDS
+  !#########
+
+  !#################
+  ! F_R_prime STARTS
+  !#################
 
   function FR_prime(a)
 
@@ -779,6 +970,14 @@ Contains
 
   end function FR_prime_fgsl
 
+  !###############
+  ! F_R_prime ENDS
+  !###############
+
+  !########################
+  ! F_R_double_prime STARTS
+  !########################
+
   function FR_double_prime(a)
 
     real(fgsl_double) :: result, abserr
@@ -795,6 +994,14 @@ Contains
 
   end function FR_double_prime
 
+  !######################
+  ! F_R_double_prime ENDS
+  !######################
+  
+  !#################
+  ! G_eff/G_N STARTS
+  !#################
+
   function Geff_over_GN(a)
 
     Implicit none
@@ -805,6 +1012,14 @@ Contains
          (F_MG(a) + 3.d0*wavenumber_k**2*FR(a)/a**2)
 
   end function Geff_over_GN
+
+  !###############
+  ! G_eff/G_N ENDS
+  !###############
+
+  !#############
+  ! Q_eff STARTS
+  !#############
 
   function Qeff(a)
 
@@ -817,6 +1032,14 @@ Contains
 
   end function Qeff
 
+  !###########
+  ! Q_eff ENDS
+  !###########
+
+  !################
+  ! \Omega_m STARTS
+  !################
+
   function Omega_Matter(a)
 
     Implicit none
@@ -826,6 +1049,14 @@ Contains
     Omega_Matter = Omega_m/a**3
 
   end function Omega_Matter
+
+  !##############
+  ! \Omega_m ENDS
+  !##############
+
+  !#################
+  ! \Omega_DE STARTS
+  !#################
 
   function Omega_DE(a)
 
@@ -847,6 +1078,33 @@ Contains
 
   end function Omega_DE_fgsl
 
+  !###############
+  ! \Omega_DE ENDS
+  !###############
+
+  !######################
+  ! \Omega_m_prime STARTS
+  !######################
+
+  function derivative_Omega_Matter(a)
+
+    Implicit none
+
+    Real*8 :: a, derivative_Omega_Matter
+
+    derivative_Omega_Matter = -3.d0*Omega_m/a**4
+
+  end function derivative_Omega_Matter
+
+  !####################
+  ! \Omega_m_prime ENDS
+  !####################
+
+
+  !#######################
+  ! \Omega_DE_prime STARTS
+  !#######################
+
   function derivative_Omega_DE(x)
 
     real(fgsl_double) :: result, abserr
@@ -854,7 +1112,8 @@ Contains
     type(fgsl_function) :: pwr
     real(fgsl_double) :: derivative_Omega_DE,x
 
-    If (MG_parametrisation .eq. 'GR_DE') then
+    If ( ( (MG_parametrisation .eq. 'GR_DE') .or. (MG_parametrisation .eq. 'GR_LAMBDA') ) .or. &
+         (MG_parametrisation .eq. 'Savvas') ) then
 
        derivative_Omega_DE = -3.d0*(1.d0 - Omega_m)*(1.d0 + equation_of_state(x))*&
             x**(-4.d0 - 3.d0*equation_of_state(x))
@@ -863,7 +1122,7 @@ Contains
 
        pwr = fgsl_function_init(Omega_DE_fgsl, c_null_ptr)
 
-       status = fgsl_deriv_central (pwr, x , 1.E-4_fgsl_double, &
+       status = fgsl_deriv_central (pwr, x , 1.E-7_fgsl_double, &
             result, abserr)
 
        derivative_Omega_DE = result
@@ -871,6 +1130,14 @@ Contains
     End if
 
   end function derivative_Omega_DE
+
+  !#####################
+  ! \Omega_DE_prime ENDS
+  !#####################
+
+  !############################################################
+  ! SUBROUTINE TO COMPUTE AND PLOT BACKGROUND QUANTITIES STARTS
+  !############################################################
 
   subroutine compute_background()
 
@@ -886,10 +1153,7 @@ Contains
          '  second_derivative_conformal_Hubble_parameter(a)  ricci_scalar(a)  ricci_scalar_prime(a)'&
          '  f(R(a))  f_R(R(a))  f_R_prime(R(a))  f_R_double_prime(R(a))  DE_density(a)  w_DE(a)'&
          '  f_RR(R(a))  f_RR_prime(R(a))  f_RR_double_prime(R(a))  Omega_M(a)  Omega_DE(a) '&
-         '  derivative_Omega_DE(a)'
-  !w_prime(a)  H(a)/H0  cs2(a)  ceff2(a) '&
-!         '  pressure_perturbation_over_density  dm_th  Vm_th  dde_th  Vde_th  \pi(a)  Geff/GN  Qeff'&
-!         '  ca2(a) x'
+         '  derivative_Omega_DE(a)  f_R-k**2/a**2*(1+3*f_R)*f_RR/F  third_derivative_conformal_Hubble'
 
     Do index=1,number_points
 
@@ -913,18 +1177,62 @@ Contains
             fMG_RR_double_prime(scale_factor(index)),&
             Omega_Matter(scale_factor(index)),&
             Omega_DE(scale_factor(index)),&
-            derivative_Omega_DE(scale_factor(index))
+            derivative_Omega_DE(scale_factor(index)),&
+!            3.d0*scale_factor(index)**2*F_MG(scale_factor(index))*fMG_R(scale_factor(index))
+!!$            (3.d0*scale_factor(index)**2*F_MG(scale_factor(index)) - &
+!!$            3.d0*scale_factor(index)**2*F_MG(scale_factor(index))**2 + &
+            3.d0*wavenumber_k**2*(1.d0 + 3.d0*fMG_R(scale_factor(index)))*fMG_RR(scale_factor(index)),&
+            third_derivative_conformal_Hubble_parameter(scale_factor(index))
 
 99     FORMAT(ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,&
-            ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10)!,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,&
-!            ES20.10,ES20.10,ES20.10,ES20.10)
+            ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10)
 
     End do
 
     close(UNIT_TEST)
 
-    call system('cd figures; python plot_background.py')
+    If (MG_parametrisation .eq. 'GR_DE') then
+
+       write(UNIT_EXE_FILE,*) 'PLOTTING BACKGROUND'
+
+       call system('cd figures; python plot_background_GR_DE.py')
+
+    Else if (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+       write(UNIT_EXE_FILE,*) 'PLOTTING BACKGROUND'
+
+       call system('cd figures; python plot_background_GR_LAMBDA.py')
+   
+    Else if (MG_parametrisation .eq. 'Savvas') then
+
+       write(UNIT_EXE_FILE,*) 'PLOTTING BACKGROUND'
+
+       call system('cd figures; python plot_background_Savvas.py')
+
+    Else if (MG_parametrisation .eq. 'HS_Basilakos') then
+
+       write(UNIT_EXE_FILE,*) 'PLOTTING BACKGROUND'
+
+       call system('cd figures; python plot_background.py')
+
+    Else if (MG_parametrisation .eq. 'Starobinsky_Basilakos') then
+
+       write(UNIT_EXE_FILE,*) 'MG_PARAMETRISATION Starobinsky_Basilakos IS NOT YET IMPLEMENTED'
+
+       stop
+
+    Else 
+
+       write(UNIT_EXE_FILE,*) 'UNKNOWN MG_PARAMETRISATION'
+
+       stop
+
+    End if 
 
   end subroutine compute_background
+
+  !##########################################################
+  ! SUBROUTINE TO COMPUTE AND PLOT BACKGROUND QUANTITIES ENDS
+  !##########################################################
 
 end Module background

@@ -70,6 +70,22 @@ Contains
              write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
                   scale_factor_horizon_crossing(wavenumber_k) 
 
+          Else if ( (MG_parametrisation .eq. 'Savvas') .and. (approach .eq. 'GI') ) then
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_horizon_crossing(wavenumber_k) 
+
+          Else if (((MG_parametrisation .eq. 'HS_Basilakos') .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos')) .or.&
+               (MG_parametrisation .eq. 'Savvas')) then
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_horizon_crossing(wavenumber_k) 
+
+             write(UNIT_EXE_FILE,*) 'CURRENT MG_PARAMETRISATION ASSUMES SUB-HORIZON APPROXIMATION '&
+                  'AND CURRENT MODE VIOLATES THIS CONDITION. CODE STOPPED!'
+
+             stop
+
           End if
 
        End if
@@ -98,6 +114,14 @@ Contains
           End if
 
        Else if (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+          continue
+
+       Else if (MG_parametrisation .eq. 'HS_BASILAKOS') then
+
+          continue
+
+       Else if (MG_parametrisation .eq. 'Savvas') then
 
           continue
 
@@ -136,30 +160,49 @@ Contains
              write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
                   scale_factor_horizon_crossing(wavenumber_k) 
 
+          Else if (MG_parametrisation .eq. 'HS_BASILAKOS') then
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_horizon_crossing(wavenumber_k) 
+
+          Else if (MG_parametrisation .eq. 'Savvas') then
+
+             write(UNIT_EXE_FILE,*) 'THE MODE CROSSES THE HORIZON (IN MATTER DOMINANCE) AT SCALE FACTOR : ', &
+                  scale_factor_horizon_crossing(wavenumber_k) 
+
           End if
 
        End if
 
     End if
 
-    If ( wavenumber_k/ks .lt. lower_limit_ks ) then
+!!$    If ( wavenumber_k/ks .lt. lower_limit_ks ) then
+!!$
+!!$       write(UNIT_EXE_FILE,*) 'MODE WAVELENGTH IS GREATER THAN SOUND HORIZON AT MATTER-RADIATION EQUALITY'
+!!$
+!!$    Else if ( wavenumber_k/ks .gt. upper_limit_ks ) then
+!!$
+!!$       write(UNIT_EXE_FILE,*) 'MODE WAVELENGTH IS SMALLER THAN SOUND HORIZON AT MATTER-RADIATION EQUALITY'
+!!$
+!!$    Else
+!!$
+!!$       write(UNIT_EXE_FILE,*) 'MODE DOES NOT SATISFY CONDITION FOR INITIAL POTENTIAL IN 1112.4837'
+!!$
+!!$       stop
+!!$
+!!$    End if
 
-       write(UNIT_EXE_FILE,*) 'MODE WAVELENGTH IS GREATER THAN SOUND HORIZON AT MATTER-RADIATION EQUALITY'
+    If (approach .eq. 'GI') then 
 
-    Else if ( wavenumber_k/ks .gt. upper_limit_ks ) then
-
-       write(UNIT_EXE_FILE,*) 'MODE WAVELENGTH IS SMALLER THAN SOUND HORIZON AT MATTER-RADIATION EQUALITY'
+       write(UNIT_EXE_FILE,*) 'EQUATIONS FOR PERTURBATIONS ARE WRITTEN IN A GAUGE INVARIANT FORMALISM. INITIAL CONDITIONS'&
+            'ARE SET DURING MATTER DOMINATION. WE FOLLOW 1508.04569'
 
     Else
 
-       write(UNIT_EXE_FILE,*) 'MODE DOES NOT SATISFY CONDITION FOR INITIAL POTENTIAL IN 1112.4837'
-
-       stop
+       write(UNIT_EXE_FILE,*) 'EQUATIONS FOR PERTURBATIONS ARE WRITTEN IN THE NEWTONIAN GAUGE. INITIAL CONDITIONS'&
+            'ARE SET DURING MATTER DOMINATION WHERE THE TWO GRAVITATIONAL POTENTIALS ARE EQUAL'
 
     End if
-
-    write(UNIT_EXE_FILE,*) 'EQUATIONS FOR PERTURBATIONS ARE WRITTEN IN THE NEWTONIAN GAUGE. INITIAL CONDITIONS'&
-         'ARE SET DURING MATTER DOMINATION WHERE THE TWO GRAVITATIONAL POTENTIALS ARE EQUAL'
 
     write(UNIT_EXE_FILE,*) 'INITIAL VALUE FOR POTENTIAL IS: ',initial_condition_gravitational_potential(wavenumber_k)
 
@@ -179,17 +222,31 @@ Contains
 
           If (mode_is_subsoundhorizon) then
 
-             initial_conditions_system(2) = de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+             initial_conditions_system(2) = dark_energy_density_perturbation_sub_sound_horizon(initial_scale_factor,wavenumber_k) ! DE VELOCITY PERTURBATIONS ON SUB-SOUND SCALES 
+             !de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
 
           Else
 
-             initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-SOUND SCALES
+             If ( (e_pi .eq. 0.d0) .and. (f_pi .eq. 0.d0) ) then
+
+                initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,&
+                     wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-SOUND SCALES
+
+             Else
+
+                write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS FOR MODE SUPER-SOUND HORIZON BUT SUB-HORIZON IN A MODEL '&
+                     'WITH NON-VANISHING ANISOTROPIC STRESS ARE NOT YEY IMPLEMENTED. CODE STOPPED'
+
+                stop
+
+             End if
 
           End if
 
        Else 
 
-          initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-SOUND SCALES
+          initial_conditions_system(2) = dark_energy_density_perturbation_super_horizon(wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-HORIZON SCALES
+          !dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-SOUND SCALES
 
        End if
 
@@ -203,17 +260,34 @@ Contains
 
           If (mode_is_subsoundhorizon) then
 
-             initial_conditions_system(4) = de_velocity_perturbation_sub_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+             initial_conditions_system(4) = -dark_energy_velocity_perturbation_sub_sound_horizon(initial_scale_factor,&
+                  wavenumber_k)*H0*Sqrt(Omega_m/initial_scale_factor)/(1.d0 + equation_of_state(initial_scale_factor)) ! DE VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+
+             !de_velocity_perturbation_sub_sound_horizon(initial_scale_factor,wavenumber_k) ! DE VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
 
           Else
 
-             initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+             If ((e_pi .eq. 0.d0) .and. (f_pi .eq. 0.d0)) then
+
+                initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,&
+                     wavenumber_k) ! DE VELOCITY PERTURBATIONS SUPER-SOUND SCALES
+
+             Else
+
+                write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS FOR MODE SUPER-SOUND HORIZON BUT SUB-HORIZON IN A MODEL '&
+                     'WITH NON-VANISHING ANISOTROPIC STRESS ARE NOT YET IMPLEMENTED. CODE STOPPED'
+
+                stop
+                
+             End if
 
           End if
 
        Else 
 
-          initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE VELOCITY PERTURBATIONS ON SUPER-SOUND SCALES
+          initial_conditions_system(4) = -dark_energy_velocity_perturbation_super_horizon(initial_scale_factor,wavenumber_k)*&
+               H0*Sqrt(Omega_m/initial_scale_factor)/(1.d0 + equation_of_state(initial_scale_factor)) ! DE VELOCITY PERTURBATIONS ON SUPER-HORIZON SCALES
+          !dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE VELOCITY PERTURBATIONS ON SUPER-SOUND SCALES
 
        End if
 
@@ -229,41 +303,71 @@ Contains
 
           If (mode_is_subsoundhorizon) then
 
-             initial_conditions_system(2) = de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+             initial_conditions_system(2) = dark_energy_density_perturbation_sub_sound_horizon(initial_scale_factor,wavenumber_k) ! DE VELOCITY PERTURBATIONS ON SUB-SOUND SCALES
+             !de_density_perturbation_sub_sound_horizon(wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
 
           Else
 
-             initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+             If ( (e_pi .eq. 0.d0) .and. (f_pi .eq. 0.d0) ) then
+
+                initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,&
+                     wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-SOUND SCALES
+
+             Else
+
+                write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS FOR MODE SUPER-SOUND HORIZON BUT SUB-HORIZON IN A MODEL '&
+                     'WITH NON-VANISHING ANISOTROPIC STRESS ARE NOT YEY IMPLEMENTED. CODE STOPPED'
+
+                stop
+
+             End if
 
           End if
 
        Else 
 
-          initial_conditions_system(2) = dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+          initial_conditions_system(2) = dark_energy_density_perturbation_super_horizon(wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-HORIZON SCALES
+          !dark_energy_density_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE DENSITY PERTURBATIONS ON SUPER-SOUND SCALES
 
        End if
 
-       write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
+       write(UNIT_EXE_FILE,*) 'Y(3) IS V_m, MATTER VELOCITY PERTURBATION '
 
-       initial_conditions_system(3) = matter_velocity_perturbation(initial_scale_factor,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
+       initial_conditions_system(3) = matter_velocity_perturbation(initial_scale_factor,wavenumber_k)/wavenumber_k ! MATTER VELOCITY PERTURBATIONS
 
-       write(UNIT_EXE_FILE,*) 'Y(4) IS \theta_de, DARK ENERGY VELOCITY PERTURBATION '
+       write(UNIT_EXE_FILE,*) 'Y(4) IS V_de, DARK ENERGY VELOCITY PERTURBATION '
 
        If (mode_is_subhorizon) then 
 
           If (mode_is_subsoundhorizon) then
 
-             initial_conditions_system(4) = de_velocity_perturbation_sub_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+             initial_conditions_system(4) = -dark_energy_velocity_perturbation_sub_sound_horizon(initial_scale_factor,&
+                  wavenumber_k)*H0*Sqrt(Omega_m/initial_scale_factor)/wavenumber_k ! DE VELOCITY PERTURBATIONS ON SUB-SOUND HORIZON SCALES
+             !de_velocity_perturbation_sub_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB-SOUND SCALES
 
           Else
 
-             initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+             If ((e_pi .eq. 0.d0) .and. (f_pi .eq. 0.d0)) then
+
+                initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,&
+                     wavenumber_k)*(1.d0 + equation_of_state(initial_scale_factor))/wavenumber_k ! DE VELOCITY PERTURBATIONS SUPER-SOUND SCALES
+
+             Else
+
+                write(UNIT_EXE_FILE,*) 'INITIAL CONDITIONS FOR MODE SUPER-SOUND HORIZON BUT SUB-HORIZON IN A MODEL '&
+                     'WITH NON-VANISHING ANISOTROPIC STRESS ARE NOT YET IMPLEMENTED. CODE STOPPED'
+
+                stop
+                
+             End if
 
           End if
 
        Else 
 
-          initial_conditions_system(4) = dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+          initial_conditions_system(4) = -dark_energy_velocity_perturbation_super_horizon(initial_scale_factor,wavenumber_k)*&
+               H0*Sqrt(Omega_m/initial_scale_factor)/wavenumber_k ! DE VELOCITY PERTURBATIONS ON SUPER-HORIZON SCALES
+!dark_energy_velocity_perturbation_super_sound_horizon(initial_scale_factor,wavenumber_k) ! DE VELOCITY PERTURBATIONS ON SUPER-SOUND SCALES
 
        End if
 
@@ -304,31 +408,15 @@ Contains
 
        write(UNIT_EXE_FILE,*) 'Y(2) IS \delta_de, DARK ENERGY DENSITY PERTURBATION '
 
-       If (mode_is_subhorizon) then
+       initial_conditions_system(2) = dark_energy_density_perturbation(initial_scale_factor,initial_conditions_system(1))
 
-          initial_conditions_system(2) = dark_energy_density_perturbation(initial_scale_factor,initial_conditions_system(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUB HORIZON SCALES
+       write(UNIT_EXE_FILE,*) 'Y(3) IS V_m, MATTER VELOCITY PERTURBATION '
 
-       Else
+       initial_conditions_system(3) = matter_velocity_perturbation(initial_scale_factor,wavenumber_k)!/wavenumber_k ! MATTER VELOCITY PERTURBATIONS
 
-          initial_conditions_system(2) = dark_energy_density_perturbation(initial_scale_factor,initial_conditions_system(1)) ! DARK ENERGY DENSITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
+       write(UNIT_EXE_FILE,*) 'Y(4) IS V, DARK ENERGY VELOCITY PERTURBATION '
 
-       End if
-
-       write(UNIT_EXE_FILE,*) 'Y(3) IS \theta_m, MATTER VELOCITY PERTURBATION '
-
-       initial_conditions_system(3) = matter_velocity_perturbation(initial_scale_factor,wavenumber_k) ! MATTER VELOCITY PERTURBATIONS
-
-       write(UNIT_EXE_FILE,*) 'Y(4) IS (1+wDE)*\theta_de, DARK ENERGY VELOCITY PERTURBATION '
-
-       If (mode_is_subhorizon) then
-
-          initial_conditions_system(4) = dark_energy_velocity_perturbation(initial_scale_factor,initial_conditions_system(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUB HORIZON SCALES
-
-       Else
-
-          initial_conditions_system(4) = dark_energy_velocity_perturbation(initial_scale_factor,initial_conditions_system(1)) ! DARK ENERGY VELOCITY PERTURBATIONS ON SUPER-SOUND HORIZON SCALES
-
-       End if
+       initial_conditions_system(4) = dark_energy_velocity_perturbation(initial_scale_factor,initial_conditions_system(1))
 
        write(UNIT_EXE_FILE,*) 'Y(5) IS \phi, POTENTIAL \phi '
 
@@ -337,6 +425,32 @@ Contains
        write(UNIT_EXE_FILE,*) 'Y(6) IS \psi, POTENTIAL \psi '
 
        initial_conditions_system(6) = initial_condition_gravitational_potential(wavenumber_k)
+
+    Else if ( ( (MG_parametrisation .eq. 'Savvas') .or. ( (MG_parametrisation .eq. 'HS_Basilakos') &
+         .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) ) .and. (approach .eq. 'GI') ) then
+
+       write(UNIT_EXE_FILE,*) 'Y(1) IS \Delta_m, MATTER DENSITY PERTURBATION '
+
+       initial_conditions_system(1) = -matter_velocity_perturbation(initial_scale_factor,wavenumber_k)/&
+            conformal_Hubble_parameter(initial_scale_factor) ! MATTER DENSITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(2) IS \Delta_de, DARK ENERGY DENSITY PERTURBATION '
+
+       initial_conditions_system(2) = 0.d0
+
+       write(UNIT_EXE_FILE,*) 'Y(3) IS Theta_m, MATTER VELOCITY PERTURBATION '
+
+       initial_conditions_system(3) = 3.d0*conformal_Hubble_parameter(initial_scale_factor)*&
+            matter_velocity_perturbation(initial_scale_factor,wavenumber_k)/wavenumber_k**2 ! MATTER VELOCITY PERTURBATIONS
+
+       write(UNIT_EXE_FILE,*) 'Y(4) IS Theta_de, DARK ENERGY VELOCITY PERTURBATION '
+
+       initial_conditions_system(4) = 0.d0
+
+       write(UNIT_EXE_FILE,*) 'Y(5) IS Z '
+
+       initial_conditions_system(5) = 3.d0*Omega_m*conformal_Hubble_parameter(initial_scale_factor)*&
+            matter_velocity_perturbation(initial_scale_factor,wavenumber_k)/wavenumber_k**2/2.d0
 
     End if
 
@@ -362,25 +476,24 @@ Contains
 
        If (dimension_system_ode .eq. 4) then
 
-          write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
+          write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE IN MATTER DOMINATED REGIME'
 
-          write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_{de}^{sup-hor}    v_{de}^{sup-hor}   '//trim(' ')//&
-               '\delta_{de}^{sub-sound}    v_{de}^{sub-sound}'
+          write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_{de}^{sup-hor}    V_{de}^{sup-hor}   '//trim(' ')//&
+               '\delta_{de}^{sub-sound}    V_{de}^{sub-sound}    \delta_m     V_m '
 
           Do m=1,101
 
           Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
                log10(initial_scale_factor))/real(101-1))
 
-             ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM EQ. (3.3) IN MY PAPER, THAT IS, v_{de}.
+             ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM EQ. (3.3) IN MY PAPER, THAT IS, V_{de}.
              write(UNIT_OUTPUT_FILE2,89) Z,dark_energy_density_perturbation_super_horizon(wavenumber_k),&
-                  -dark_energy_velocity_perturbation_super_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/((1.d0+&
-                  equation_of_state(Z))*sqrt(Z)*wavenumber_k),&
+                  -dark_energy_velocity_perturbation_super_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m/Z)/wavenumber_k,&
                   dark_energy_density_perturbation_sub_sound_horizon(Z,wavenumber_k),&
-                  -dark_energy_velocity_perturbation_sub_sound_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/(wavenumber_k*(1.d0+&
-                  equation_of_state(Z))*sqrt(Z))
+                  -dark_energy_velocity_perturbation_sub_sound_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m/Z)/wavenumber_k,&
+                  matter_density_perturbation(Z,wavenumber_k),matter_velocity_perturbation(Z,wavenumber_k)/wavenumber_k
 
-89           Format(E20.10,E20.10,E20.10,E20.10,E20.10)
+89           Format(E20.10,E20.10,E20.10,E20.10,E20.10,ES20.10,ES20.10)
 
           End do
 
@@ -388,23 +501,22 @@ Contains
 
           write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
 
-          write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_{de}^{sup-hor}    v_{de}^{sup-hor}   '//trim(' ')//&
-               '\delta_{de}^{sub-sound}    v_{de}^{sub-sound}'
+          write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_{de}^{sup-hor}    V_{de}^{sup-hor}   '//trim(' ')//&
+               '\delta_{de}^{sub-sound}    V_{de}^{sub-sound}     \delta_m     V_m'
 
           Do m=1,101
 
           Z = 10**(log10(initial_scale_factor) + real(m-1)*(log10(final_scale_factor) - &
                log10(initial_scale_factor))/real(101-1))
 
-             ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM EQ. (3.3) IN MY PAPER, THAT IS, v_{de}.
+             ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM EQ. (3.3) IN MY PAPER, THAT IS, V_{de}.
              write(UNIT_OUTPUT_FILE2,88) Z,dark_energy_density_perturbation_super_horizon(wavenumber_k),&
-                  -dark_energy_velocity_perturbation_super_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/((1.d0+&
-                  equation_of_state(Z))*sqrt(Z)*wavenumber_k),&
+                  -dark_energy_velocity_perturbation_super_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m/Z)/wavenumber_k,&
                   dark_energy_density_perturbation_sub_sound_horizon(Z,wavenumber_k),&
-                  -dark_energy_velocity_perturbation_sub_sound_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m)/(wavenumber_k*(1.d0+&
-                  equation_of_state(Z))*sqrt(Z))
+                  -dark_energy_velocity_perturbation_sub_sound_horizon(Z,wavenumber_k)*H0*sqrt(Omega_m/Z)/wavenumber_k,&
+                  matter_density_perturbation(Z,wavenumber_k),matter_velocity_perturbation(Z,wavenumber_k)/wavenumber_k
 
-88           Format(E20.10,E20.10,E20.10,E20.10,E20.10)!,E20.10,E20.10)
+88           Format(E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10)
 
           End do
 
@@ -427,19 +539,21 @@ Contains
 
           ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM DRAFT
           write(UNIT_OUTPUT_FILE2,91) Z,matter_density_perturbation(Z,wavenumber_k),&
-               matter_velocity_perturbation(Z,wavenumber_k)/wavenumber_k,phi_plus(Z),chi(Z)
+               matter_velocity_perturbation(Z,wavenumber_k),phi_plus(Z),chi(Z)
 
 91        Format(E20.10,E20.10,E20.10,E20.10,E20.10)
 
        End do
+
+       call system('cd figures; python plot_perturbations.py')
 
     Else if ( ( (MG_parametrisation .eq. 'Savvas') .or. ( (MG_parametrisation .eq. 'HS_Basilakos') .or. &
          (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) ) .and. (approach .eq. 'EF') ) then
 
        write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
 
-       write(UNIT_OUTPUT_FILE2,*) '# scale_factor  \delta_sub_horizon  V_sub_horizon  \delta_m  V_m  '&
-            'phi  psi'
+       write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta    V    \delta_m    V_m    phi    psi'!&
+!            '    cs2_MD    cs2_MD_prime    angular_frequency '
 
        Do m=1,101
 
@@ -449,22 +563,20 @@ Contains
           ! PERTURBATION VELOCITICIES BELOW FOLLOW FROM DRAFT
           write(UNIT_OUTPUT_FILE2,90) Z,dark_energy_density_perturbation(Z,&
                matter_density_perturbation(Z,wavenumber_k)),&
-               dark_energy_velocity_perturbation(Z,&
-               matter_density_perturbation(Z,wavenumber_k)),&
+               dark_energy_velocity_perturbation(Z,matter_density_perturbation(Z,wavenumber_k)),&
                matter_density_perturbation(Z,wavenumber_k),&
-               matter_velocity_perturbation(Z,wavenumber_k),&
-               phi(Z,wavenumber_k,matter_density_perturbation(Z,wavenumber_k),&
-               dark_energy_density_perturbation(Z,&
-               matter_density_perturbation(Z,wavenumber_k)),matter_velocity_perturbation(Z,wavenumber_k),&
-               dark_energy_velocity_perturbation(Z,matter_density_perturbation(Z,wavenumber_k))),&
-               psi(Z,wavenumber_k,matter_density_perturbation(Z,wavenumber_k),&
-               dark_energy_density_perturbation(Z,&
-               matter_density_perturbation(Z,wavenumber_k)),matter_velocity_perturbation(Z,wavenumber_k),&
-               dark_energy_velocity_perturbation(Z,matter_density_perturbation(Z,wavenumber_k)))
+               matter_velocity_perturbation(Z,wavenumber_k),&!/wavenumber_k,&
+               initial_condition_gravitational_potential(wavenumber_k),&
+               initial_condition_gravitational_potential(wavenumber_k)!,&
+!               sound_speed_squared(Z),&
+!               sound_speed_squared_prime(Z),&
+!               angular_frequency(Z)
 
-90        Format(E20.10,E20.10,E20.10,ES20.10,ES20.10,ES20.10,ES20.10)
+90        Format(E20.10,E20.10,E20.10,ES20.10,ES20.10,ES20.10,ES20.10)!,ES20.10,ES20.10,ES20.10)
 
        End do
+
+       call system('cd figures; python plot_perturbations_Savvas_EF.py')
 
     End if
 
@@ -473,10 +585,6 @@ Contains
   !####################################
   ! WRITING ANALYTICAL SOLUTIONS ENDS
   !####################################
-
-  !###################################################################################
-  ! SOME EQUATIONS THAT ARE USED ALONG WITH THE EQUATIONS FOR INITIAL CONDITIONS ABOVE
-  !###################################################################################
 
   !#####################################
   ! EFFECTIVE SOUND SPEED SQUARED BEGINS 
@@ -543,10 +651,20 @@ Contains
 
           write(UNIT_EXE_FILE,*) 'AT INITIAL SCALE FACTOR a = ', initial_scale_factor
 
+          write(UNIT_EXE_FILE,*) 'AT ONSET SOUND SPEED SQUARED IN MATTER DOMINATED REGIME IS : ', &
+          sound_speed_squared_in_matter_dominated_regime(initial_scale_factor)
+
+          write(UNIT_EXE_FILE,*) 'AT ONSET SOUND SPEED SQUARED IS : ', sound_speed_squared(initial_scale_factor)
+
           write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED IS : ', &
                effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
 
        Else 
+
+          write(UNIT_EXE_FILE,*) 'AT ONSET SOUND SPEED SQUARED IN MATTER DOMINATED REGIME IS : ', &
+          sound_speed_squared_in_matter_dominated_regime(initial_scale_factor)
+
+          write(UNIT_EXE_FILE,*) 'AT ONSET SOUND SPEED SQUARED IS : ', sound_speed_squared(initial_scale_factor)
 
           write(UNIT_EXE_FILE,*) 'AT ONSET EFFECTIVE SOUND SPEED SQUARED IS NEGATIVE: ',&
                effective_sound_speed_squared(initial_scale_factor,wavenumber_k)
@@ -559,10 +677,20 @@ Contains
 
           write(UNIT_EXE_FILE,*) 'AT FINAL SCALE FACTOR a = ', final_scale_factor
 
+          write(UNIT_EXE_FILE,*) 'AT FINAL SCALE FACTOR  SOUND SPEED SQUARED IN MATTER DOMINATED REGIME IS : ', &
+          sound_speed_squared_in_matter_dominated_regime(final_scale_factor)
+
+          write(UNIT_EXE_FILE,*) 'AT FINAL TIME SOUND SPEED SQUARED IS : ', sound_speed_squared(final_scale_factor)
+
           write(UNIT_EXE_FILE,*) 'EFFECTIVE SOUND SPEED SQUARED IS : ', &
                effective_sound_speed_squared(final_scale_factor,wavenumber_k)
 
        Else
+
+          write(UNIT_EXE_FILE,*) 'AT FINAL SCALE FACTOR  SOUND SPEED SQUARED IN MATTER DOMINATED REGIME IS : ', &
+          sound_speed_squared_in_matter_dominated_regime(final_scale_factor)
+
+          write(UNIT_EXE_FILE,*) 'AT FINAL TIME SOUND SPEED SQUARED IS : ', sound_speed_squared(final_scale_factor)
 
           write(UNIT_EXE_FILE,*) 'TODAY S EFFECTIVE SOUND SPEED SQUARED IS NEGATIVE: ', &
                effective_sound_speed_squared(final_scale_factor,wavenumber_k)
@@ -648,30 +776,122 @@ Contains
 
   end function adiabatic_sound_speed_squared
 
-  ! ANISOTROPIC STRESS FOR AN EFFECTIVE FLUID FROM F(R) PARAMETRISATION BY BASILAKOS ET AL.
+  ! PRESSURE PERTURBATION OVER DENSITY IN F(R) MODELS ON SUB-HORIZON SCALES 
 
-  function anisotropic_stress(a,y1,y2,y3,y4)
+  function pressure_perturbation_over_density(a)
 
     Implicit none
 
-    Real*8 :: a,anisotropic_stress,y1,y2,y3,y4
+    Real*8 :: a,pressure_perturbation_over_density
 
-    If (MG_parametrisation .eq. 'HS_Basilakos') then
+    pressure_perturbation_over_density = (2.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a))/(&
+         3.d0*F_MG(a) + 9.d0*wavenumber_k**2*FR(a)/a**2 ) !+ &
+
+!!$            ((a*conformal_Hubble_parameter(a)**2 + a**2*conformal_Hubble_parameter(a)*&
+!!$            derivative_conformal_Hubble_parameter(a))*FR_prime(a) + &
+!!$            a**2*conformal_Hubble_parameter(a)**2*FR_double_prime(a) )/(a**2*F_MG(a)  &
+!!$            + 3.d0*wavenumber_k**2*FR(a)) !+ &
+!!$
+!!$            ( a*conformal_Hubble_parameter(a)**2*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
+!!$            derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
+!!$            F_MG_double_prime(a))/(F_MG(a)*wavenumber_k**2 + 3.d0*wavenumber_k**4*FR(a)/a**2  )
+
+
+  end function pressure_perturbation_over_density
+
+  ! ANISOTROPIC STRESS FOR AN EFFECTIVE FLUID FROM F(R) PARAMETRISATION BY BASILAKOS ET AL.
+
+  function f1(a)
+
+    Implicit none
+
+    Real*8 :: f1,a
+
+    f1 = 0.d0 !FR(a)/F_MG(a)/(1.d0 - F_MG(a))
+
+  end function f1
+
+  function derivative_f1(a)
+
+    Implicit none
+
+    Real*8 :: derivative_f1,a
+
+    derivative_f1 = 0.d0
+!!$((-1.d0 + 2.d0*F_MG(a))*FR(a)*F_MG_prime(a) - &
+!!$         (-1.d0 + F_MG(a))*F_MG(a)*FR_prime(a))/((-1.d0 + F_MG(a))**2*F_MG(a)**2)
+
+  end function derivative_f1
+
+  function f2(a)
+
+    Implicit none
+
+    Real*8 :: f2,a
+
+    f2 = 0.d0 !(2.d0 - 3.d0*F_MG(a))*FR(a)/F_MG(a)/(1.d0 - F_MG(a))
+
+  end function f2
+
+  function derivative_f2(a)
+
+    Implicit none
+
+    Real*8 :: derivative_f2,a
+
+    derivative_f2 = 0.d0 
+!!$((-2 + 4*F_MG(a) - 3*F_MG(a)**2)*F_MG_prime(a)*FR(a) + &
+!!$         F_MG(a)*(2 - 5*F_MG(a) + 3*F_MG(a)**2)*FR_prime(a))/&
+!!$       ((-1 + F_MG(a))**2*F_MG(a)**2)
+
+  end function derivative_f2
+
+  function anisotropic_stress_sub_horizon(a)
+
+    Implicit none
+
+    Real*8 :: a,anisotropic_stress_sub_horizon
+
+       anisotropic_stress_sub_horizon = wavenumber_k**2*FR(a)/(a**2*F_MG(a) - a**2*F_MG(a)**2 +&
+            wavenumber_k**2*FR(a)*(2.d0 - 3.d0*F_MG(a)) )*dark_energy_density_perturbation(a,&
+            matter_density_perturbation(a,wavenumber_k))
+
+  end function anisotropic_stress_sub_horizon
+
+  function anisotropic_stress_sub_horizon_MD(a)
+
+    Implicit none
+
+    Real*8 :: a,anisotropic_stress_sub_horizon_MD
+
+       anisotropic_stress_sub_horizon_MD = wavenumber_k**2*FR(a)/(a**2*F_MG(a) - a**2*F_MG(a)**2 +&
+            wavenumber_k**2*FR(a)*(2.d0 - 3.d0*F_MG(a)) )*dark_energy_density_perturbation_in_MD_for_f_of_R(a)
+
+  end function anisotropic_stress_sub_horizon_MD
+
+  function anisotropic_stress(a)
+
+    Implicit none
+
+    Real*8 :: a,anisotropic_stress
+
+    If ( (MG_parametrisation .eq. 'HS_Basilakos') .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) then
 
        anisotropic_stress = wavenumber_k**2*FR(a)/(a**2*F_MG(a)**2 + &
             3.d0*wavenumber_k**2*FR(a)*F_MG(a) )
 
-!!$wavenumber_k**2*FR(a)/(a**2*F_MG(a) - &
-!!$         a**2*F_MG(a)**2 + wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a))
-
-    Else if (MG_parametrisation .eq. 'Starobinsky_Basilakos') then
-
-       anisotropic_stress = -2.d10
-
     Else if (MG_parametrisation .eq. 'GR_DE') then
 
-       anisotropic_stress = e_pi*Delta_matter(a,wavenumber_k,y1,y3) + (f_pi/(1.d0 + &
-            g_pi**2*conformal_Hubble_parameter(a)**2/wavenumber_k**2))*Delta_dark_energy(a,wavenumber_k,y2,y4)
+       anisotropic_stress = -4.d10 !e_pi*Delta_matter(a,wavenumber_k,y1,y3) + (f_pi/(1.d0 + &
+            !g_pi**2*conformal_Hubble_parameter(a)**2/wavenumber_k**2))*Delta_dark_energy(a,wavenumber_k,y2,y4)
+
+    Else if (MG_parametrisation .eq. 'Savvas') then
+
+       anisotropic_stress = (wavenumber_k**2*FR(a)/a**2/F_MG(a))/(1.d0 + &
+            3.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a))/F_MG(a)
+
+!delta_0(wavenumber_k)*a*wavenumber_k**2*Omega_Matter(a)*fMG_RR(a)/&
+!            F_MG(a)/Omega_DE(a)/(F_MG(a)*a**2 + 3.d0*wavenumber_k**2*fMG_RR(a))
 
     Else
 
@@ -687,7 +907,7 @@ Contains
     type(c_ptr), value :: params
     real(c_double) :: anisotropic_stress_fr
 
-    anisotropic_stress_fr = anisotropic_stress(a,0.d0,0.d0,0.d0,0.d0)
+    anisotropic_stress_fr = anisotropic_stress(a)
 
   end function anisotropic_stress_fr
 
@@ -698,7 +918,8 @@ Contains
     type(fgsl_function) :: pwr
     real(fgsl_double) :: derivative_anisotropic_stress,a
 
-    If (MG_parametrisation .eq. 'HS_Basilakos') then
+    If ( ( (MG_parametrisation .eq. 'HS_Basilakos') .or. (MG_parametrisation .eq. 'Savvas') ) .or. &
+         (MG_parametrisation .eq. 'Starobinsky_Basilakos') ) then
 
        pwr = fgsl_function_init(anisotropic_stress_fr, c_null_ptr)
 
@@ -706,10 +927,6 @@ Contains
          result, abserr)
 
        derivative_anisotropic_stress = result
-
-    Else if (MG_parametrisation .eq. 'Starobinsky_Basilakos') then
-
-       derivative_anisotropic_stress = -2.d10
 
     Else if (MG_parametrisation .eq. 'GR') then
 
@@ -729,26 +946,32 @@ Contains
 
     Real*8 :: dark_energy_pressure_perturbation,a
 
-    If ( a .lt. switch_off_pressure_perturbation_terms) then
+!    If ( a .lt. switch_off_pressure_perturbation_terms) then
 
-       dark_energy_pressure_perturbation = 2.d0*wavenumber_k**2*FR(a)/(3.d0*a**2*F_MG(a)**2 + &
-            9.d0*wavenumber_k**2*FR(a)*F_MG(a) ) + &
+    dark_energy_pressure_perturbation = ( 2.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a) +  &
+         3.d0*( 1.d0 + 5.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a) )*(&
+         a*conformal_Hubble_parameter(a)**2*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
+         derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
+         F_MG_double_prime(a) )/wavenumber_k**2)/(1.d0 + 3.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a) )/3.d0/F_MG(a)
 
-            ((a*conformal_Hubble_parameter(a)**2 + a**2*conformal_Hubble_parameter(a)*&
-            derivative_conformal_Hubble_parameter(a))*FR_prime(a) + &
-            a**2*conformal_Hubble_parameter(a)**2*FR_double_prime(a) )/(a**2*F_MG(a)  &
-            + 3.d0*wavenumber_k**2*FR(a)) + &
+!2.d0*wavenumber_k**2*FR(a)/(3.d0*a**2*F_MG(a)**2 + &
+!            9.d0*wavenumber_k**2*FR(a)*F_MG(a) ) + &
 
-            ( a*conformal_Hubble_parameter(a)**2*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
-            derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
-            F_MG_double_prime(a))/(F_MG(a)*wavenumber_k**2 + 3.d0*wavenumber_k**4*FR(a)/a**2  )
+!            ((a*conformal_Hubble_parameter(a)**2 + a**2*conformal_Hubble_parameter(a)*&
+!            derivative_conformal_Hubble_parameter(a))*FR_prime(a) + &
+!            a**2*conformal_Hubble_parameter(a)**2*FR_double_prime(a) )/(a**2*F_MG(a)  &
+!            + 3.d0*wavenumber_k**2*FR(a)) + &
 
-    Else
+!            ( a*conformal_Hubble_parameter(a)**2*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
+!            derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
+!            F_MG_double_prime(a))/(F_MG(a)*wavenumber_k**2 + 3.d0*wavenumber_k**4*FR(a)/a**2  )
 
-       dark_energy_pressure_perturbation = 2.d0*wavenumber_k**2*FR(a)/(3.d0*a**2*F_MG(a)**2 + &
-            9.d0*wavenumber_k**2*FR(a)*F_MG(a) ) 
+!    Else
 
-    End if
+!       dark_energy_pressure_perturbation = 2.d0*wavenumber_k**2*FR(a)/(3.d0*a**2*F_MG(a)**2 + &
+!            9.d0*wavenumber_k**2*FR(a)*F_MG(a) ) 
+
+!    End if
 
   end function dark_energy_pressure_perturbation
 
@@ -849,16 +1072,18 @@ Contains
 
     Implicit none
 
-    Real*8 :: a,y1,y2,y3,y4,sigma
+    Real*8 :: a,y1,y2,y3,y4,sigma,anisotropic_stress
+
+    anisotropic_stress = e_pi*Delta_matter(a,wavenumber_k,y1,y3) + (f_pi/(1.d0 + &
+         g_pi**2*conformal_Hubble_parameter(a)**2/wavenumber_k**2))*Delta_dark_energy(a,wavenumber_k,y2,y4)
 
     If (MG_parametrisation .eq. 'GR_DE') then
 
-       sigma = 2.d0*anisotropic_stress(a,y1,y2,y3,y4)/(3.d0*(1.d0+equation_of_state(a)))
+       sigma = 2.d0*anisotropic_stress/(3.d0*(1.d0+equation_of_state(a)))
 
     Else
 
-       sigma = 2.d0*anisotropic_stress(a,y1,y2,y3,y4)/(3.d0*(1.d0 + &
-            equation_of_state(a) ))
+       sigma = 2.d0*anisotropic_stress/(3.d0*(1.d0 + equation_of_state(a) ))
 
     End if
 
@@ -897,7 +1122,10 @@ Contains
 
     Implicit none
 
-    Real*8 :: a,k,y1,y2,y3,y4,psi
+    Real*8 :: a,k,y1,y2,y3,y4,psi,anisotropic_stress
+
+    anisotropic_stress = e_pi*Delta_matter(a,wavenumber_k,y1,y3) + (f_pi/(1.d0 + &
+         g_pi**2*conformal_Hubble_parameter(a)**2/wavenumber_k**2))*Delta_dark_energy(a,wavenumber_k,y2,y4)
 
     If (MG_parametrisation .eq. 'GR_DE') then
 
@@ -906,13 +1134,11 @@ Contains
 
     Else
 
-       psi = phi(a,k,y1,y2,y3,y4) - 3.d0*H0**2/k**2*anisotropic_stress(a,y1,y2,y3,y4)*&
-            Omega_DE(a)*a**2
+       psi = phi(a,k,y1,y2,y3,y4) - 3.d0*H0**2/k**2*anisotropic_stress*Omega_DE(a)*a**2
 
     End if
 
   end function psi
-
 
   !################################################################################################################
   ! SOLUTIONS FOR DARK ENERGY PERTURBATIONS IN MATTER DOMINATED REGIME WHEN CONSIDERING THE DARK ENERGY ANISOTROPIC
@@ -927,8 +1153,8 @@ Contains
 
     Real*8 :: k,dark_energy_density_perturbation_super_horizon
 
-    dark_energy_density_perturbation_super_horizon = delta_0_super_horizon(k)*(((4.d0*e_pi - &
-         3.d0*(1.d0 + w0_fld))*( 3.d0*H0**2*Omega_m))/(k**2*(-3.d0 + 4.d0*f_pi) ) )
+    dark_energy_density_perturbation_super_horizon = delta_0(k)*3.d0*H0**2*Omega_m/k**2*(&
+         4.d0*e_pi - 3.d0*(1.d0 + equation_of_state(1.d0)))/(4.d0*f_pi - 3.d0)
 
   end function dark_energy_density_perturbation_super_horizon
 
@@ -940,8 +1166,8 @@ Contains
 
     Real*8 :: a,k,dark_energy_velocity_perturbation_super_horizon
 
-    dark_energy_velocity_perturbation_super_horizon = a*delta_0_super_horizon(k)*(4.d0*e_pi-&
-         3.d0*(1.d0+w0_fld))/(4.d0*f_pi - 3.d0)
+    dark_energy_velocity_perturbation_super_horizon = a*delta_0(k)*(4.d0*e_pi - &
+         3.d0*(1.d0 + equation_of_state(1.d0) ))/(4.d0*f_pi - 3.d0)
 
   end function dark_energy_velocity_perturbation_super_horizon
 
@@ -1058,16 +1284,16 @@ Contains
 
     Real*8 :: dark_energy_density_perturbation,a,y1
 
-    dark_energy_density_perturbation = &
+    dark_energy_density_perturbation = ((1.d0 - F_MG(a) + &
+         wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)/a**2/F_MG(a))/(1.d0 + &
+         3.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a)))*Omega_Matter(a)*y1/F_MG(a)/Omega_DE(a)
 
 !!$-delta_0(wavenumber_k)*b_fR*wavenumber_k**2*&
 !!$         (1.d0-Omega_m)*a**5/3.d0/Omega_m**2/H0**2 - 52.d0*a**4*b_fR*delta_0(wavenumber_k)*&
 !!$         (1.d0-Omega_m)/35.d0/Omega_m - 81.d0*a**2*b_fR*delta_0(wavenumber_k)*(1.d0-Omega_m)*&
 !!$         (2.d0*Omega_m - 9.d0*a**3*b_fR*(1.d0-Omega_m))*H0**4/5.d0/wavenumber_k**4
 
-         ((1.d0 - F_MG(a) + &
-         wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)/(a**2*F_MG(a)))/(1.d0 + &
-         3.d0*wavenumber_k**2*FR(a)/(a**2*F_MG(a))))*Omega_m*y1/F_MG(a)/(a**3*Omega_DE(a))
+         
 
   end function dark_energy_density_perturbation
 
@@ -1077,15 +1303,20 @@ Contains
 
     Real*8 :: dark_energy_velocity_perturbation,a,y1
 
-    dark_energy_velocity_perturbation = &
+    dark_energy_velocity_perturbation = ( 1.d0 + 6.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a)  )/( 1.d0 + &
+         3.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a) )*( a*conformal_Hubble_parameter(a)*F_MG_prime(a)/F_MG(a)/2.d0 )*&
+         Omega_Matter(a)*y1/Omega_DE(a)
 
 !!$12.d0*delta_0(wavenumber_k)*(1.d0-Omega_m)*b_fR*a**(7.d0/2.d0)*H0/&
 !!$         5.d0/Sqrt(Omega_m) + H0**3*108.d0*a**(5.d0/2.d0)*b_fR*delta_0(wavenumber_k)*(1.d0-Omega_m)*Sqrt(Omega_m)/&
 !!$         13.d0/wavenumber_k**2 
 
-         (Omega_m*y1)/(a**3*Omega_DE(a))*(conformal_Hubble_parameter(a)*wavenumber_k**2*&
-         FR_prime(a)/F_MG(a)/a + a*conformal_Hubble_parameter(a)*F_MG_prime(a)/F_MG(a)&
-         )/(1.d0 + 3.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a))
+         !(conformal_Hubble_parameter(a)*wavenumber_k**2*&
+         !FR_prime(a)/F_MG(a)/a  &
+         !+ a*conformal_Hubble_parameter(a)*F_MG_prime(a)/F_MG(a)/2.d0&
+         !)/(1.d0 + 3.d0*wavenumber_k**2*FR(a)/a**2/F_MG(a))
+
+         
 
   end function dark_energy_velocity_perturbation
   
@@ -1160,7 +1391,7 @@ Contains
          ' \delta_m  V_m  \delta_de  V_de  \pi_de/\delta_de  '&
          !\delta P_de  \delta \rho_de'&
          !  \delta P_de/\rho_de'&
-         ' \sigma F FR H'
+         ' F FR H'
 
     Do index=1,number_points
 
@@ -1175,19 +1406,17 @@ Contains
             matter_velocity_perturbation(scale_factor(index),wavenumber_k),&
             dark_energy_density_perturbation(scale_factor(index),matter_density_perturbation(scale_factor(index),wavenumber_k)),&
             dark_energy_velocity_perturbation(scale_factor(index),matter_density_perturbation(scale_factor(index),wavenumber_k)),&
-            anisotropic_stress(scale_factor(index),0.d0,&
-            1.d0,0.d0,0.d0),&
+            anisotropic_stress(scale_factor(index)),&
             !dark_energy_pressure_perturbation_over_dark_energy_density(scale_factor(index),&
             !matter_density_perturbation(scale_factor(index),wavenumber_k))*dark_energy_density(scale_factor(index)),&
             !dark_energy_density_perturbation(scale_factor(index),matter_density_perturbation(scale_factor(index),&
             !wavenumber_k))*dark_energy_density(scale_factor(index)),&
             !dark_energy_pressure_perturbation_over_dark_energy_density(scale_factor(index),&
             !matter_density_perturbation(scale_factor(index),wavenumber_k)),&
-            sigma(scale_factor(index),0.d0,&
-            1.d0,0.d0,0.d0),F_MG(scale_factor(index)),&
+            F_MG(scale_factor(index)),&
             FR(scale_factor(index)),conformal_Hubble_parameter(scale_factor(index))/scale_factor(index)
 
-99     FORMAT(E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,&
+99     FORMAT(E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,E20.10,&
             !E20.10,E20.10,&
             !E20.10,
             E20.10,E20.10,E20.10,E20.10)
@@ -1208,9 +1437,12 @@ Contains
 
     open(UNIT_TEST,file='./output/functions.txt')
 
-    write(UNIT_TEST,*) '# a  w(a)  w_prime(a)  H(a)/H0  cs2(a)  ceff2(a)  Omega_m(a)  Omega_DE(a)'&
-         '  pressure_perturbation_over_density  dm_th  Vm_th  dde_th  Vde_th  \pi(a)  Geff/GN  Qeff'&
-         '  ca2(a) x'
+    write(UNIT_TEST,*) '# a  anisotropic_stress_MD  anisotropic_stress_sub_horizon_MD   anisotropic_stress_sub'&
+         'cs2MD   cs2MD_sub_horizon'
+
+!w(a)  w_prime(a)  H(a)/H0  cs2(a)  ceff2(a)  Omega_m(a)  Omega_DE(a)'&
+!         '  pressure_perturbation_over_density  dm_th  Vm_th  dde_th  Vde_th  \pi(a)  Geff/GN  Qeff'&
+!         '  ca2(a) x'
 
     Do index=1,number_points
 
@@ -1218,26 +1450,31 @@ Contains
             log10(initial_scale_factor))/real(number_points-1))
 
        write(UNIT_TEST,99) scale_factor(index),&
-            equation_of_state(scale_factor(index)),&
-            derivative_equation_of_state(scale_factor(index)),&
-            conformal_Hubble_parameter(scale_factor(index))/scale_factor(index)/H0,&
-            sound_speed_squared(scale_factor(index)),&
-            effective_sound_speed_squared(scale_factor(index),wavenumber_k),&
-            Omega_m/scale_factor(index)**3,&
-            Omega_DE(scale_factor(index)),&
-            dark_energy_pressure_perturbation(scale_factor(index)),&
-            matter_density_perturbation(scale_factor(index),wavenumber_k)/delta_0(wavenumber_k),&
-            matter_velocity_perturbation(scale_factor(index),wavenumber_k)/delta_0(wavenumber_k),&
-            dark_energy_density_perturbation(scale_factor(index),&
-            matter_density_perturbation(scale_factor(index),wavenumber_k))/delta_0(wavenumber_k),&
-            dark_energy_velocity_perturbation(scale_factor(index),&
-            matter_density_perturbation(scale_factor(index),wavenumber_k))/delta_0(wavenumber_k),&
-            anisotropic_stress(scale_factor(index),0.d0,0.d0,0.d0,0.d0),&
-            Geff_over_GN(scale_factor(index)),&
-            Qeff(scale_factor(index)),&
-            adiabatic_sound_speed_squared(scale_factor(index)),&
+            anisotropic_stress(scale_factor(index)),&
+            anisotropic_stress_sub_horizon_MD(scale_factor(index)),&
+            anisotropic_stress_sub_horizon(scale_factor(index)),&
+            sound_speed_squared_in_matter_dominated_regime(scale_factor(index)),&            
+            sound_speed_squared(scale_factor(index))
+!!$            equation_of_state(scale_factor(index)),&
+!!$            derivative_equation_of_state(scale_factor(index)),&
+!!$            conformal_Hubble_parameter(scale_factor(index))/scale_factor(index)/H0,&
+!!$            sound_speed_squared(scale_factor(index)),&
+!!$            effective_sound_speed_squared(scale_factor(index),wavenumber_k),&
+!!$            Omega_m/scale_factor(index)**3,&
+!!$            Omega_DE(scale_factor(index)),&
+!!$            dark_energy_pressure_perturbation(scale_factor(index)),&
+!!$            matter_density_perturbation(scale_factor(index),wavenumber_k)/delta_0(wavenumber_k),&
+!!$            matter_velocity_perturbation(scale_factor(index),wavenumber_k)/delta_0(wavenumber_k),&
+!!$            dark_energy_density_perturbation(scale_factor(index),&
+!!$            matter_density_perturbation(scale_factor(index),wavenumber_k))/delta_0(wavenumber_k),&
+!!$            dark_energy_velocity_perturbation(scale_factor(index),&
+!!$            matter_density_perturbation(scale_factor(index),wavenumber_k))/delta_0(wavenumber_k),&
+!!$            anisotropic_stress(scale_factor(index)),&
+!!$            Geff_over_GN(scale_factor(index)),&
+!!$            Qeff(scale_factor(index)),&
+!!$            adiabatic_sound_speed_squared(scale_factor(index)),&
             !F_MG_savvas_prime(scale_factor(index))
-            Lambda/(ricci_scalar(scale_factor(index))-3.d0*Lambda)
+!            Lambda/(ricci_scalar(scale_factor(index))-3.d0*Lambda)
             !ricci_scalar_prime(scale_factor(index))
 !            effective_sound_speed_squared(scale_factor(index),wavenumber_k),speedL,&
 !            de_density_perturbation_sub_sound_horizon(wavenumber_k),&
@@ -1365,8 +1602,8 @@ Contains
             !dark_energy_density_perturbation(scale_factor(index),matter_density_perturbation(scale_factor(index),&
             !wavenumber_k))
 
-99     FORMAT(ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,&
-            ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10)!,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,&
+99     FORMAT(ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10)!,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,&
+!            ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10)!,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,ES20.10,&
 !            ES20.10,ES20.10,ES20.10,ES20.10)
 
     End do

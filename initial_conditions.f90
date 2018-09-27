@@ -99,9 +99,9 @@ Contains
 
     Real*8 :: B,k,delta_0
 
-    B = initial_condition_gravitational_potential(k)
+    !B = initial_condition_gravitational_potential(k)
 
-    delta_0 = -(2.d0*B*k**2)/(3.d0*H0**2*Omega_m) 
+    delta_0 = 1.d0 !-(2.d0*B*k**2)/(3.d0*H0**2*Omega_m) 
 
   end function delta_0
 
@@ -128,24 +128,24 @@ Contains
 
     Real*8 :: k,initial_condition_gravitational_potential
 
-    If ( wavenumber_k/ks .lt. lower_limit_ks ) then
+!!$    If ( wavenumber_k/ks .lt. lower_limit_ks ) then
+!!$
+!!$       initial_condition_gravitational_potential = -3.d0*Sqrt(2.d0*Pi**2*H0**3*&
+!!$            primordial_dimensionless_power_spectrum(k)/k**3)/5.d0
+!!$
+!!$    Else if ( wavenumber_k/ks .gt. lower_limit_ks ) then
+!!$
+!!$       initial_condition_gravitational_potential = -3.d0*Sqrt(2.d0*Pi**2*H0**3*&
+!!$            primordial_dimensionless_power_spectrum(k)/k**3)/5.d0*3.d0*&
+!!$            (ks/k)**2*log(k/ks)
+!!$    
+!!$    Else
+!!$
+!!$       initial_condition_gravitational_potential = 1.d10
+!!$
+!!$    End if
 
-       initial_condition_gravitational_potential = -3.d0*Sqrt(2.d0*Pi**2*H0**3*&
-            primordial_dimensionless_power_spectrum(k)/k**3)/5.d0
-
-    Else if ( wavenumber_k/ks .gt. lower_limit_ks ) then
-
-       initial_condition_gravitational_potential = -3.d0*Sqrt(2.d0*Pi**2*H0**3*&
-            primordial_dimensionless_power_spectrum(k)/k**3)/5.d0*3.d0*&
-            (ks/k)**2*log(k/ks)
-    
-    Else
-
-       initial_condition_gravitational_potential = 1.d10
-
-    End if
-
-!    initial_condition_gravitational_potential = -3.d0/2.d0*delta_0(k)*H0**2*Omega_m/k**2
+    initial_condition_gravitational_potential = -3.d0/2.d0*delta_0(k)*H0**2*Omega_m/k**2
 
   end function initial_condition_gravitational_potential
 
@@ -159,7 +159,9 @@ Contains
 
   end function primordial_dimensionless_power_spectrum
 
-  ! SOUND SPEED SQUARED FOR AN EFFECTIVE FLUID FROM F(R) PARAMETRISATION BY BASILAKOS ET AL. 
+  !##################################################
+  ! SOUND SPEED SQUARED FOR AN EFFECTIVE FLUID STARTS
+  !################################################## 
 
   function sound_speed_squared(a)
 
@@ -175,22 +177,25 @@ Contains
 
        sound_speed_squared = 0.d0
 
-    Else if ( ( (MG_parametrisation .eq. 'Starobinsky_Basilakos') .or. &
-         (MG_parametrisation .eq. 'HS_Basilakos') ) .or. (MG_parametrisation .eq. 'Savvas') ) then
+    Else if ( ( (MG_parametrisation .eq. 'Starobinsky_Basilakos') .or. (MG_parametrisation .eq. 'HS_Basilakos') ) &
+         .or. (MG_parametrisation .eq. 'Savvas') ) then
        
-       sound_speed_squared = (2.d0*wavenumber_k**2*FR(a))/(3.d0*a**2*F_MG(a) - &
-            3.d0*a**2*F_MG(a)**2 + 3.d0*wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)) &
+       sound_speed_squared = &
+!            sound_speed_squared_in_matter_dominated_regime(a)
 
-            +(conformal_Hubble_parameter(a)**2*FR_prime(a)/a + conformal_Hubble_parameter(a)*&
-            derivative_conformal_Hubble_parameter(a)*FR_prime(a)&
-            + conformal_Hubble_parameter(a)**2*FR_double_prime(a))/&
-            (1.d0 - F_MG(a) + wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)/a**2/F_MG(a) ) &
+(2.d0*wavenumber_k**2*FR(a))/(3.d0*a**2*F_MG(a) - &
+            3.d0*a**2*F_MG(a)**2 + 3.d0*wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)) !&
 
-            + ( a*conformal_Hubble_parameter(a)**2*& 
-            F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
-            derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
-            F_MG_double_prime(a))/( wavenumber_k**2 - F_MG(a)*wavenumber_k**2 + wavenumber_k**4*(2.d0 - &
-            3.d0*F_MG(a))*FR(a)/a**2/F_MG(a)  )
+!!$            +(conformal_Hubble_parameter(a)**2*FR_prime(a)/a + conformal_Hubble_parameter(a)*&
+!!$            derivative_conformal_Hubble_parameter(a)*FR_prime(a)&
+!!$            + conformal_Hubble_parameter(a)**2*FR_double_prime(a))/&
+!!$            (1.d0 - F_MG(a) + wavenumber_k**2*(2.d0 - 3.d0*F_MG(a))*FR(a)/a**2/F_MG(a) ) &
+!!$
+!!$            + ( a*conformal_Hubble_parameter(a)**2*& 
+!!$            F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)*&
+!!$            derivative_conformal_Hubble_parameter(a)*F_MG_prime(a) + a**2*conformal_Hubble_parameter(a)**2*&
+!!$            F_MG_double_prime(a))/( wavenumber_k**2 - F_MG(a)*wavenumber_k**2 + wavenumber_k**4*(2.d0 - &
+!!$            3.d0*F_MG(a))*FR(a)/a**2/F_MG(a)  )
 
     End if
 
@@ -205,5 +210,154 @@ Contains
 !!$    End if
 
   end function sound_speed_squared
+
+  function sound_speed_squared_fgsl(a, params) bind(c)
+    
+    real(c_double), value :: a
+    type(c_ptr), value :: params
+    real(c_double) :: sound_speed_squared_fgsl
+
+    sound_speed_squared_fgsl = sound_speed_squared(a)
+
+  end function sound_speed_squared_fgsl
+
+  !################################################
+  ! SOUND SPEED SQUARED FOR AN EFFECTIVE FLUID ENDS
+  !################################################ 
+
+  !#############################################################
+  ! DERIVATIVE SOUND SPEED SQUARED FOR AN EFFECTIVE FLUID STARTS
+  !############################################################# 
+
+  function sound_speed_squared_prime(a)
+
+    real(fgsl_double) :: result, abserr
+    integer(fgsl_int) :: status
+    type(fgsl_function) :: pwr
+    real(fgsl_double) :: sound_speed_squared_prime,a
+
+    pwr = fgsl_function_init(sound_speed_squared_fgsl, c_null_ptr)
+
+    status = fgsl_deriv_central (pwr, a , 9.9E-4_fgsl_double, &
+         result, abserr)
+
+    sound_speed_squared_prime = result
+
+  end function sound_speed_squared_prime
+
+  !###########################################################
+  ! DERIVATIVE SOUND SPEED SQUARED FOR AN EFFECTIVE FLUID ENDS
+  !########################################################### 
+
+  !#####################################################
+  !SOUND SPEED SQUARED IN MATTER DOMINATED REGIME STARTS
+  !#####################################################
+
+  function sound_speed_squared_in_matter_dominated_regime(a)
+
+    Implicit none
+
+    Real*8 :: a,sound_speed_squared_in_matter_dominated_regime!,H_prime,H
+
+!    H = conformal_Hubble_parameter(a)
+
+!    H_prime = derivative_conformal_Hubble_parameter(a)
+
+    If (MG_parametrisation .eq. 'GR_DE') then
+
+       sound_speed_squared_in_matter_dominated_regime = cs2_fld
+
+    Else if (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+       sound_speed_squared_in_matter_dominated_regime = 0.d0
+
+    Else if ( ( (MG_parametrisation .eq. 'Starobinsky_Basilakos') .or. &
+         (MG_parametrisation .eq. 'HS_Basilakos') ) .or. (MG_parametrisation .eq. 'Savvas') ) then
+       
+       sound_speed_squared_in_matter_dominated_regime = -( a**2*fMG_R_double_prime(a)  + &
+            3.d0*a*fMG_R_prime(a)/2.d0   )/( fMG_R(a)*wavenumber_k**2*a/H0**2/Omega_m + &
+            3.d0*fMG_R(a) + 3.d0*a*fMG_R_prime(a)  )
+
+! BELOW THE DEFINITION WITH COMOVING DENSITY PERTURBATION
+!!$-2.d0*( fMG_R(a)*(1.d0 + 2.d0*a*H_prime/H) + &
+!!$            a**2*fMG_R_double_prime(a) + a*fMG_R_prime(a)*(2.d0 + a*H_prime/H) )/( &
+!!$            2.d0*fMG_R(a)*wavenumber_k**2/H**2/3.d0 + a*fMG_R_prime(a)  )/3.d0
+
+
+
+    End if
+
+  end function sound_speed_squared_in_matter_dominated_regime
+  
+  !###################################################
+  !SOUND SPEED SQUARED IN MATTER DOMINATED REGIME ENDS
+  !###################################################
+
+  !####################################################################################################
+  !ANGULAR FREQUENCY DARK ENERGY PERTURBATIONS SAVVAS PARAMETRISATION IN MATTER DOMINATED REGIME STARTS
+  !####################################################################################################
+
+  function angular_frequency(a)
+
+    Implicit none
+
+    Real*8 :: angular_frequency,a
+
+    angular_frequency = 3.d0*sound_speed_squared_prime(a)/a + &
+         sound_speed_squared_in_matter_dominated_regime(a)*wavenumber_k**2/a/H0**2/Omega_m + &
+         21.d0*(sound_speed_squared_in_matter_dominated_regime(a) + 1.d0)/2.d0/a**2
+
+  end function angular_frequency
+
+  !##################################################################################################
+  !ANGULAR FREQUENCY DARK ENERGY PERTURBATIONS SAVVAS PARAMETRISATION IN MATTER DOMINATED REGIME ENDS
+  !##################################################################################################
+
+
+  !###########################################################################
+  !DARK ENERGY DENSITY PERTURBATION IN MATTER DOMINATED REGIME FOR f(R) STARTS
+  !###########################################################################
+
+  function dark_energy_density_perturbation_in_MD_for_f_of_R(a)
+
+    Implicit none
+
+    Real*8 :: dark_energy_density_perturbation_in_MD_for_f_of_R,a,Eeff,phi
+
+    Eeff = Omega_DE(a)
+
+    phi = initial_condition_gravitational_potential(wavenumber_k)
+
+    dark_energy_density_perturbation_in_MD_for_f_of_R = Omega_m/3.d0/a**3/Eeff*phi*(&
+         2.d0*fMG_R(a)*wavenumber_k**2*a/H0**2/Omega_m + 6.d0*fMG_R(a) + 6.d0*a*fMG_R_prime(a) )
+
+  end function dark_energy_density_perturbation_in_MD_for_f_of_R
+
+  !#########################################################################
+  !DARK ENERGY DENSITY PERTURBATION IN MATTER DOMINATED REGIME FOR f(R) ENDS
+  !#########################################################################
+
+  !############################################################################
+  !DARK ENERGY VELOCITY PERTURBATION IN MATTER DOMINATED REGIME FOR f(R) STARTS
+  !############################################################################
+
+  function dark_energy_velocity_perturbation_in_MD_for_f_of_R(a) ! THIS IS CAPITAL V=(1+w)*\theta/k
+
+    Implicit none
+
+    Real*8 :: dark_energy_velocity_perturbation_in_MD_for_f_of_R,a,Eeff,phi
+
+    Eeff = Omega_DE(a)
+
+    phi = initial_condition_gravitational_potential(wavenumber_k)
+
+    dark_energy_velocity_perturbation_in_MD_for_f_of_R = -2.d0*Sqrt(Omega_m)*wavenumber_k*phi/3.d0/H0/&
+         Sqrt(a**5)/Eeff*(fMG_R(a) + a*fMG_R_prime(a)/2.d0 )
+
+  end function dark_energy_velocity_perturbation_in_MD_for_f_of_R
+
+  !##########################################################################
+  !DARK ENERGY VELOCITY PERTURBATION IN MATTER DOMINATED REGIME FOR f(R) ENDS
+  !##########################################################################
 
 end Module initial_conditions
