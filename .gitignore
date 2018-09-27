@@ -4,3 +4,4 @@ output/*.txt
 *.zip
 *.tgz
 *.out
+figures/*.pdf
