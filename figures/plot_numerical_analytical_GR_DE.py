@@ -10,16 +10,19 @@ import matplotlib.pyplot as py
 #######################################################################################
 #######################################################################################
 
-am4,dmm4,dem4,vmm4,vdem4 = np.loadtxt('../output/numerical_solution.txt',unpack=True,usecols=[0,1,2,3,4])
+am4,dmm4,dem4,vmm4,vdem4 = np.loadtxt('../output/numerical_solution_gr_de.txt',unpack=True,usecols=[0,1,2,3,4])
 
 xm4,dea1m4,vdea1m4,dea2m4,vdea2m4,dm,Vm = np.loadtxt('../output/analytical_solution.txt',unpack=True,usecols=[0,1,2,3,4,5,6])
+
+a,dml,Vml,phi_plus,chi = np.loadtxt('../output/numerical_solution_gr_lambda.txt',unpack=True,usecols=[0,1,2,3,4])
 
 # \delta_m
 
 fig = py.figure()
-labels = (r'$\delta_{m}^{num}$',r'$\delta_{m}^{ana}$')
+labels = (r'$\delta_{m}^{num}$',r'$\delta_{m}^{ana}$',r'$\delta_{m}^{\Lambda CDM}$')
 py.loglog(am4,abs(dmm4),color='r')
 py.loglog(xm4,abs(dm),color='b',linestyle='dashed')
+py.loglog(a,abs(dml),linestyle='dotted',c='g')
 py.xlabel(r'$a$',fontsize='large')
 py.legend(labels,loc=0)
 py.savefig('comparison_delta_m.pdf')
@@ -28,9 +31,10 @@ py.close()
 # V_m
 
 fig = py.figure()
-labels = (r'$V_{m}^{num}$',r'$V_{m}^{ana}$')
+labels = (r'$V_{m}^{num}$',r'$V_{m}^{ana}$',r'$V_{m}^{\Lambda CDM}$')
 py.loglog(am4,abs(vmm4),color='r')
 py.loglog(xm4,abs(Vm),color='b',linestyle='dashed')
+py.loglog(a,abs(Vml),linestyle='dotted',c='g')
 py.xlabel(r'$a$',fontsize='large')
 py.legend(labels,loc=0)
 py.savefig('comparison_V_m.pdf')

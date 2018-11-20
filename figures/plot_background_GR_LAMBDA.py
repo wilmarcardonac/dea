@@ -127,6 +127,8 @@ py.loglog(a,abs(w_DE),color='red')
 
 py.xlabel(r'$a$',fontsize='large')
 
+py.ylim(1.e-1,1.e1)
+
 py.legend(labels_w_DE,loc=0)
 
 py.savefig('./background/w_DE.pdf')

@@ -52,7 +52,7 @@ CCFLAG += -D__CLASSDIR__='"$(MDIR)"'
 # where to find include files *.h
 INCLUDES = -I../include
 INCLUDES += -I/usr/local/include ##WC
-LDFLAG += /usr/local/lib -lgsl -lgslcblas
+LDFLAG += -L/usr/local/lib 
 #LIBDIR = /usr/local/lib              ##WC  
 #LIB_FL = -L$(LIBDIR) -lgsl -lgslcblas -lm  ##WC
 
@@ -137,7 +137,7 @@ libclass.a: $(TOOLS) $(SOURCE) $(EXTERNAL)
 	$(AR)  $@ $(addprefix build/, $(TOOLS) $(SOURCE) $(EXTERNAL))
 
 class: $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(CLASS)
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o class $(addprefix build/,$(notdir $^)) -lm 
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o class $(addprefix build/,$(notdir $^)) -lm -lgsl -lgslcblas
 
 test_sigma: $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(TEST_SIGMA)
 	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_sigma $(addprefix build/,$(notdir $^)) -lm

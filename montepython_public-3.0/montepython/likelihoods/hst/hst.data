@@ -1,0 +1,4 @@
+# Values for Hubble Space Telescope
+# Updated to Riess et al. 2016 (arXiv:1604.01424)
+hst.h      = 0.7324
+hst.sigma  = 0.0174

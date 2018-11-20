@@ -59,7 +59,8 @@ struct background
 		     not [delta p/delta rho] in the synchronous or
 		     newtonian gauge!!!) */
 
-  double b_pi; /* Dark Energy Anisotropic stress parameter */
+  double b_pi; /* Dark Energy Anisotropic stress parameter for designer model w = -1 */
+  double bhs; /* PARAMETER IN THE HU-SAWICKY MODEL WITH SAVVAS' PARAMETRISATION */
 
   double Omega0_ur; /**< \f$ \Omega_{0 \nu r} \f$ : ultra-relativistic neutrinos */
 

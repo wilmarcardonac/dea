@@ -528,7 +528,7 @@ Contains
          ( (MG_parametrisation .eq. 'HS_Basilakos') .or. (MG_parametrisation .eq. 'Starobinsky_Basilakos')&
          ) ) .and. (approach .eq. 'CHI') ) then
 
-       write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE'
+       write(UNIT_EXE_FILE,*) 'WRITING ANALYTICAL SOLUTIONS FOR THE CURRENT MODE IN MATTER DOMINANCE'
 
        write(UNIT_OUTPUT_FILE2,*) '# scale_factor    \delta_m    V_m    phi_plus    chi'
 

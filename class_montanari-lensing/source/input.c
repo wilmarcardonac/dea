@@ -514,34 +514,40 @@ int input_init(
 
   if ((flag1 == _FALSE_) && (flag2 == _FALSE_)) {
     pba->Omega0_lambda = 1.-pba->Omega0_k-pba->Omega0_g-pba->Omega0_ur-pba->Omega0_b-pba->Omega0_cdm-pba->Omega0_ncdm_tot;
+    class_read_double("b_pi",pba->b_pi);
+    class_read_double("bhs",pba->bhs);
   }
   else {
     if (flag1 == _TRUE_) {
       pba->Omega0_lambda= param1;
       pba->Omega0_fld = 1. - pba->Omega0_k - param1 - Omega_tot;
+      class_read_double("b_pi",pba->b_pi);
+      class_read_double("bhs",pba->bhs);
     }
     if (flag2 == _TRUE_) {
       pba->Omega0_lambda= 1. - pba->Omega0_k - param2 - Omega_tot;
       pba->Omega0_fld = param2;
+      class_read_double("b_pi",pba->b_pi);
+      class_read_double("bhs",pba->bhs);
     }
   }
 
-  if (pba->Omega0_fld != 0.) {
-    class_read_double("w0_fld",pba->w0_fld);
-    class_read_double("wa_fld",pba->wa_fld);
-    class_read_double("cs2_fld",pba->cs2_fld);
-    class_read_double("e_pi",ppt->e_pi);
-    class_read_double("f_pi",ppt->f_pi);
-    class_read_double("g_pi",ppt->g_pi);
-    class_read_double("b_pi",pba->b_pi);
-    class_test((pba->b_pi !=0.) && ((ppt->e_pi != 0.) || (ppt->f_pi != 0.) || (ppt->g_pi != 0.)),errmsg,
-    "WHEN RUNNING SAVVAS PARAMETRISATION FOR DARK ENERGY ANISOTROPIC STRESS, PARAMETERS OF OTHER PARAMETRISATIONS MUST BE SET TO ZERO"); 
-    if (pba->b_pi != 0.) {
+  if (pba->Omega0_fld != 0.)
+    {
+      class_read_double("w0_fld",pba->w0_fld);
+      class_read_double("wa_fld",pba->wa_fld);
+      class_read_double("cs2_fld",pba->cs2_fld);
+      class_read_double("e_pi",ppt->e_pi);
+      class_read_double("f_pi",ppt->f_pi);
+      class_read_double("g_pi",ppt->g_pi);
+    /*    class_test((pba->bhs !=0.) && ((ppt->e_pi != 0.) || (ppt->f_pi != 0.) || (ppt->g_pi != 0.)),errmsg,
+    "WHEN RUNNING SAVVAS PARAMETRISATION FOR DARK ENERGY ANISOTROPIC STRESS, PARAMETERS OF OTHER PARAMETRISATIONS MUST BE SET TO ZERO\n"); 
+    if (pba->bhs != 0.) {
       printf("THIS PARAMETRISATION OF DARK ENERGY ANISOTROPIC STRESS HAS VARYING SOUND SPEED AND VARYING EQUATION OF STATE\n");
       printf("'w' IS IN GENERAL DIFFERENT FROM THE USUAL 'w_0 + w_a*(1-a)'\n");
       printf("THEREFORE THE GIVEN PARAMETERS 'w0_fld', 'wa_fld', and 'cs2_fld' ARE NOT USED\n");
+      }*/
     }
-  }
 
   /* scale factor today (arbitrary) */
   class_read_double("a_today",pba->a_today);
@@ -2108,6 +2114,7 @@ int input_default_params(
   pba->wa_fld=0.;
   pba->cs2_fld=1.;
   pba->b_pi=0.; 
+  pba->bhs=0.;
 
   /** - thermodynamics structure */
 
