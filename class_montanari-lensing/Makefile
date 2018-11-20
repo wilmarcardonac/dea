@@ -51,8 +51,13 @@ CCFLAG += -D__CLASSDIR__='"$(MDIR)"'
 
 # where to find include files *.h
 INCLUDES = -I../include
+#<<<<<<< HEAD
 INCLUDES += -I/opt/ohpc/pub/libs/gnu/gsl/1.16/include ##WC
 LDFLAG += -L/opt/ohpc/pub/libs/gnu/gsl/1.16/lib -lgsl -lgslcblas
+#=======
+#INCLUDES += -I/usr/local/include ##WC
+#LDFLAG += -L/usr/local/lib 
+#>>>>>>> 4e3dc2a532559db7be0ddcfb1dc5d4a5ec1dd2da
 #LIBDIR = /usr/local/lib              ##WC  
 #LIB_FL = -L$(LIBDIR) -lgsl -lgslcblas -lm  ##WC
 
@@ -137,7 +142,7 @@ libclass.a: $(TOOLS) $(SOURCE) $(EXTERNAL)
 	$(AR)  $@ $(addprefix build/, $(TOOLS) $(SOURCE) $(EXTERNAL))
 
 class: $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(CLASS)
-	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o class $(addprefix build/,$(notdir $^)) -lm 
+	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o class $(addprefix build/,$(notdir $^)) -lm -lgsl -lgslcblas
 
 test_sigma: $(TOOLS) $(SOURCE) $(EXTERNAL) $(OUTPUT) $(TEST_SIGMA)
 	$(CC) $(OPTFLAG) $(OMPFLAG) $(LDFLAG) -o test_sigma $(addprefix build/,$(notdir $^)) -lm

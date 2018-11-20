@@ -39,13 +39,12 @@ Program time_evolution
 
   y0 = R0/(R0-3.d0*Lambda)
 
-  alpha = -fR0/(b2*H0**2/R0*y0**a2*(Lambda/R0)**b2*fgsl_sf_hyperg_2f1(a2,b,c,x0)) 
+  If (MG_parametrisation .eq. 'Savvas') then
 
-!  print *, 'Hello', -final_scale_factor*fMG_R_prime(final_scale_factor)/E_H(final_scale_factor)/(1.d0 + fMG_R(final_scale_factor)) 
+     alpha = -fR0/(b2*H0**2/R0*y0**a2*(Lambda/R0)**b2*fgsl_sf_hyperg_2f1(a2,b,c,x0)) 
 
-  print *, fgsl_sf_hyperg_2f1(1.d0,1.d0,1.d0,5.d-1)
- 
-  stop
+  End if
+
   !########################################### 
   ! ASSIGMENTS AND INITIALIZATION OF VARIABLES
   !###########################################
@@ -56,7 +55,7 @@ Program time_evolution
 
 !  call test_function()
 !  call test_approximations()
-!  call compute_background()
+  call compute_background()
 !  stop
   !##############################################################################################################################
   ! INPUT PARAMETERS FOR THE SUBROUTINE SOLVING THE SYSTEM. LOOK INSIDE 'radau5.f90 TO GET THE CORRECT MEANING FOR EACH PARAMETER
@@ -76,8 +75,8 @@ Program time_evolution
 
   XEND = final_scale_factor ! ENDPOINT OF INTEGRATION                                           
 
-  RTOL = 1.d-5              ! REQUIRED TOLERANCE
-  ATOL = 1.d-1*RTOL!  0*RTOL ! REQUIRED TOLERANCE 
+  RTOL = 1.d-6              ! REQUIRED TOLERANCE
+  ATOL = 1.d-6*RTOL!  0*RTOL ! REQUIRED TOLERANCE 
   ITOL = 0                   ! REQUIRED TOLERANCE                                     
                                                
   H = 1.d-8                  ! INITIAL STEP SIZE

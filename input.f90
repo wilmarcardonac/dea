@@ -64,7 +64,19 @@ Contains
 
     open(UNIT_EXE_FILE,file=Execution_information)
 
-    open(UNIT_OUTPUT_FILE,file=NUMERICAL_SOLUTION)
+    If (MG_parametrisation .eq. 'GR_LAMBDA') then
+
+       open(UNIT_OUTPUT_FILE,file=NUMERICAL_SOLUTION_GR_LAMBDA)
+
+    Else if (MG_parametrisation .eq. 'GR_DE') then
+
+       open(UNIT_OUTPUT_FILE,file=NUMERICAL_SOLUTION_GR_DE)
+
+    Else
+
+       open(UNIT_OUTPUT_FILE,file=NUMERICAL_SOLUTION)
+
+    End if
 
     open(UNIT_OUTPUT_FILE2,file=ANALYTICAL_SOLUTION)
 
@@ -128,7 +140,7 @@ Contains
 
           write(UNIT_EXE_FILE,*) 'THIS ANALYSIS ASSUMES GENERAL RELATIVITY AND DARK ENERGY IS MODELLED AS A FLUID: ' 
 
-          write(UNIT_EXE_FILE,*) 'SYSTEM OF EQUATIONS INCLUDE POTENTIALS'
+          write(UNIT_EXE_FILE,*) 'SYSTEM OF EQUATIONS INCLUDES POTENTIALS'
 
        Else
 

@@ -1,0 +1,4 @@
+# CBI likelihood requires a .newdat file, describing all relevant
+# properties of the experiment.
+cbi.data_directory  = data.path['data']
+cbi.file            = 'CBIpol_2.0_final.newdat'
