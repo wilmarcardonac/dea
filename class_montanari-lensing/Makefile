@@ -51,8 +51,8 @@ CCFLAG += -D__CLASSDIR__='"$(MDIR)"'
 
 # where to find include files *.h
 INCLUDES = -I../include
-INCLUDES += -I/usr/local/include ##WC
-LDFLAG += /usr/local/lib -lgsl -lgslcblas
+INCLUDES += -I/opt/ohpc/pub/libs/gnu/gsl/1.16/include ##WC
+LDFLAG += -L/opt/ohpc/pub/libs/gnu/gsl/1.16/lib -lgsl -lgslcblas
 #LIBDIR = /usr/local/lib              ##WC  
 #LIB_FL = -L$(LIBDIR) -lgsl -lgslcblas -lm  ##WC
 
