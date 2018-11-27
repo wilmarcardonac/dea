@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/home/wcardona/software/canopy/bin/python
 """
 .. module:: MontePython
    :synopsis: Main module

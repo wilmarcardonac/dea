@@ -81,7 +81,7 @@
 #include "background.h"
 #include <stdio.h>
 #include <math.h>
-#include <gsl/gsl_sf_hyperg.h>
+/*#include <gsl/gsl_sf_hyperg.h>*/
 
 /**
  * Background quantities at given conformal time tau.
@@ -465,6 +465,8 @@ int background_indices(
 	    {
 	      pba->has_fR = _TRUE_;
 	      printf("RUNNING DESIGNER MODEL WITH w=-1 \n");
+	      printf("DESIGNER MODEL COMMENTED OUT TEMPORALY \n");
+	      exit(1);
 	    }
 	  if (pba->bhs != 0.)
 	    {
@@ -837,9 +839,10 @@ int background_functions(
     {
       if (pba->b_pi != 0.)
 	{
-	  pvecback[pba->index_bg_Fprime_fR] = ((pow(a,2.+3.*des_c0)*(7.+6.*des_c0)*fR0HS*pow(pow(a,3.)*(1.-om0)+om0,-1.-des_c0)*gsl_sf_hyperg_2F1(des_c0,1.5+des_c0,13./6.+2.*des_c0,(pow(a,3.)*(1.-om0))/(pow(a,3.)*(1.-om0)+om0)))/(2.*gsl_sf_hyperg_2F1(1.+des_c0,1.5+des_c0,13./6.+2.*des_c0,1.-om0))+(pow(a,2.+3.*des_c0)*fR0HS*(2.*pow(a,3.)*(1.-om0)-om0)*pow(pow(a,3.)*(1.-om0)+om0,-2.-des_c0)*gsl_sf_hyperg_2F1(1.+des_c0,1.5+des_c0,13./6.+2.*des_c0,(pow(a,3.)*(1.-om0))/(pow(a,3.)*(1.-om0)+om0)))/(2.*gsl_sf_hyperg_2F1(1.+des_c0,1.5+des_c0,13./6+2.*des_c0,1.-om0)));
-	  pvecback[pba->index_bg_F_fR] = 1 + (pow(a,3.)*fR0HS*pow((pow(a,3.)*(-1 + om0))/(pow(a,3.)*(-1. + om0) - om0),des_c0)*gsl_sf_hyperg_2F1(1. + des_c0,1.5 + des_c0,13./6. +2.*des_c0,(pow(a,3.)*(-1. + om0))/(pow(a,3.)*(-1. + om0) - om0)))/(pow(1. - om0,des_c0)*(-(pow(a,3.)*(-1. + om0)) + om0)*gsl_sf_hyperg_2F1(1. + des_c0,1.5 + des_c0,13./6. + 2.*des_c0,1. - om0));
-	  pvecback[pba->index_bg_FR_fR] = (pow(3.,2. + des_c0)*fR0HS*pow((pow(a,3.)*(-1. + om0))/(3.*pow(a,3.)*(-1. + om0) - 3.*om0),des_c0)*pow(-(pow(a,3.)*(-1. + om0)) + om0,2.)*((7. + 6.*des_c0)*(pow(a,3.)*(-1. + om0) - om0)*gsl_sf_hyperg_2F1(des_c0,1.5 + des_c0,13./6. + 2.*des_c0,(pow(a,3.)*(-1. + om0))/(pow(a,3.)*(-1. + om0) - om0)) +(2.*pow(a,3.)*(-1. + om0) + om0)*gsl_sf_hyperg_2F1(1. + des_c0,1.5 + des_c0,13./6. + 2.*des_c0, (pow(a,3.)*(-1. + om0))/(pow(a,3.)*(-1. + om0) - om0))))/(2.*pow(a,6.)*pow(1. - om0,des_c0)*om0*pow(3. + 3.*(-1. + pow(a,-3.))*om0,4.)*gsl_sf_hyperg_2F1(1. + des_c0,1.5 + des_c0,13./6. + 2.*des_c0,1. - om0));
+	  pvecback[pba->index_bg_Fprime_fR] = 0. ; 
+	    /*((pow(a,2.+3.*des_c0)*(7.+6.*des_c0)*fR0HS*pow(pow(a,3.)*(1.-om0)+om0,-1.-des_c0)*gsl_sf_hyperg_2F1(des_c0,1.5+des_c0,13./6.+2.*des_c0,(pow(a,3.)*(1.-om0))/(pow(a,3.)*(1.-om0)+om0)))/(2.*gsl_sf_hyperg_2F1(1.+des_c0,1.5+des_c0,13./6.+2.*des_c0,1.-om0))+(pow(a,2.+3.*des_c0)*fR0HS*(2.*pow(a,3.)*(1.-om0)-om0)*pow(pow(a,3.)*(1.-om0)+om0,-2.-des_c0)*gsl_sf_hyperg_2F1(1.+des_c0,1.5+des_c0,13./6.+2.*des_c0,(pow(a,3.)*(1.-om0))/(pow(a,3.)*(1.-om0)+om0)))/(2.*gsl_sf_hyperg_2F1(1.+des_c0,1.5+des_c0,13./6+2.*des_c0,1.-om0)));*/
+	  pvecback[pba->index_bg_F_fR] = 0. ; /*1 + (pow(a,3.)*fR0HS*pow((pow(a,3.)*(-1 + om0))/(pow(a,3.)*(-1. + om0) - om0),des_c0)*gsl_sf_hyperg_2F1(1. + des_c0,1.5 + des_c0,13./6. +2.*des_c0,(pow(a,3.)*(-1. + om0))/(pow(a,3.)*(-1. + om0) - om0)))/(pow(1. - om0,des_c0)*(-(pow(a,3.)*(-1. + om0)) + om0)*gsl_sf_hyperg_2F1(1. + des_c0,1.5 + des_c0,13./6. + 2.*des_c0,1. - om0)); */
+	  pvecback[pba->index_bg_FR_fR] = 0. ;/*(pow(3.,2. + des_c0)*fR0HS*pow((pow(a,3.)*(-1. + om0))/(3.*pow(a,3.)*(-1. + om0) - 3.*om0),des_c0)*pow(-(pow(a,3.)*(-1. + om0)) + om0,2.)*((7. + 6.*des_c0)*(pow(a,3.)*(-1. + om0) - om0)*gsl_sf_hyperg_2F1(des_c0,1.5 + des_c0,13./6. + 2.*des_c0,(pow(a,3.)*(-1. + om0))/(pow(a,3.)*(-1. + om0) - om0)) +(2.*pow(a,3.)*(-1. + om0) + om0)*gsl_sf_hyperg_2F1(1. + des_c0,1.5 + des_c0,13./6. + 2.*des_c0, (pow(a,3.)*(-1. + om0))/(pow(a,3.)*(-1. + om0) - om0))))/(2.*pow(a,6.)*pow(1. - om0,des_c0)*om0*pow(3. + 3.*(-1. + pow(a,-3.))*om0,4.)*gsl_sf_hyperg_2F1(1. + des_c0,1.5 + des_c0,13./6. + 2.*des_c0,1. - om0)); */
 	}
       else
 	{
