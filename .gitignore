@@ -5,3 +5,9 @@ output/*.txt
 *.tgz
 *.out
 figures/*.pdf
+dea
+Power-Spectrum/
+figures/background/*
+figures/perturbations/*
+figures/*.*~
+output/*
